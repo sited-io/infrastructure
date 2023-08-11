@@ -1,0 +1,100 @@
+---
+- name: Get zitadel service user client secret
+  ansible.builtin.command: |
+    vault read -field=client_secret \
+      kv/zitadel/users/service
+  register: client_secret_out
+
+- set_fact:
+    client_secret: "{{ client_secret_out.stdout }}"
+
+- name: Get access token for service user
+  ansible.builtin.uri:
+    url: "https://{{ zitadel.domain }}/oauth/v2/token"
+    method: POST
+    user: "{{ zitadel.service_user }}"
+    password: "{{ client_secret }}"
+    force_basic_auth: true
+    body_format: form-urlencoded
+    body:
+      grant_type: "client_credentials"
+      scope: "openid profile email urn:zitadel:iam:org:project:id:zitadel:aud"
+  register: get_token_out
+
+- set_fact:
+    access_token: "{{ get_token_out.json.access_token }}"
+
+- name: Check branding on instance
+  ansible.builtin.uri:
+    url: "https://{{ zitadel.domain }}/management/v1/policies/default/label"
+    method: GET
+    headers:
+      authorization: "Bearer {{ access_token }}"
+      content-type: application/json
+  register: branding_out
+
+- set_fact:
+    labeling_branding:
+      hideLoginNameSuffix: true
+      disableWatermark: true
+      primaryColor: "{{ branding.colors.primary }}"
+      warnColor: "{{ branding.colors.warn }}"
+      backgroundColor: "{{ branding.colors.background }}"
+      fontColor: "{{ branding.colors.font }}"
+      primaryColorDark: "{{ branding.colors.primaryDark }}"
+      warnColorDark: "{{ branding.colors.warnDark }}"
+      backgroundColorDark: "{{ branding.colors.backgroundDark }}"
+      fontColorDark: "{{ branding.colors.fontDark }}"
+
+- name: Create labeling/branding settings
+  ansible.builtin.uri:
+    url: "https://{{ zitadel.domain }}/management/v1/policies/label"
+    method: POST
+    headers:
+      authorization: "Bearer {{ access_token }}"
+      content-type: application/json
+    body_format: json
+    body: "{{ labeling_branding }}"
+    status_code:
+      - 201
+      - 409
+
+- name: Update labeling/branding settings
+  ansible.builtin.uri:
+    url: "https://{{ zitadel.domain }}/management/v1/policies/label"
+    method: PUT
+    headers:
+      authorization: "Bearer {{ access_token }}"
+      content-type: application/json
+    body_format: json
+    body: "{{ labeling_branding }}"
+    status_code:
+      - 200
+      - 400
+
+- name: Activate labeling/branding settings
+  ansible.builtin.uri:
+    url: "https://{{ zitadel.domain }}/management/v1/policies/label/_activate"
+    method: POST
+    headers:
+      authorization: "Bearer {{ access_token }}"
+      content-type: application/json
+    body_format: json
+    body: "{}"
+
+- name: Set default English login texts
+  ansible.builtin.uri:
+    url: "https://{{ zitadel.domain }}/management/v1/text/login/en"
+    method: PUT
+    headers:
+      authorization: "Bearer {{ access_token }}"
+      content-type: application/json
+    body_format: json
+    body:
+      loginText:
+        descriptionLinkingProcess: "Enter your login data to link your external user with a {{'{{'}} .OrgName {{'}}'}} account."
+        userMustBeMemberOfOrg: " "
+      selectAccountText:
+        description: "Use your {{'{{'}} .OrgName {{'}}'}} account."
+        userMustBeMemberOfOrg: " "
+  register: response_out

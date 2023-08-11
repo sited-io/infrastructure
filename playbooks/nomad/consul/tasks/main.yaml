@@ -1,0 +1,76 @@
+---
+- ansible.builtin.import_tasks: ../consul-template/consul-template.yaml
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/nomad/consul/creds
+        state: directory
+
+    - name: Copy server vault policy to working directory
+      ansible.builtin.copy:
+        src: server-nomad-consul-creds.policy.hcl
+        dest: /tmp/nomad/consul/creds/server-nomad-consul-creds.policy.hcl
+
+    - name: Create policy
+      ansible.builtin.command: |
+        vault policy write server-nomad-consul-creds \
+          /tmp/nomad/consul/creds/server-nomad-consul-creds.policy.hcl
+
+    - name: Get vault token
+      ansible.builtin.command: |
+        vault token create -field=token \
+          -policy=server-nomad-consul-creds \
+          -period=24h
+      register: server_vault_token_out
+
+    - name: Copy client vault policy to working directory
+      ansible.builtin.copy:
+        src: client-nomad-consul-creds.policy.hcl
+        dest: /tmp/nomad/consul/creds/client-nomad-consul-creds.policy.hcl
+
+    - name: Create policy
+      ansible.builtin.command: |
+        vault policy write client-nomad-consul-creds \
+          /tmp/nomad/consul/creds/client-nomad-consul-creds.policy.hcl
+
+    - name: Get vault token
+      ansible.builtin.command: |
+        vault token create -field=token \
+          -policy=client-nomad-consul-creds \
+          -period=24h
+      register: client_vault_token_out
+
+- when: inventory_hostname in groups.nomad_servers
+  set_fact:
+    vault_token: "{{ server_vault_token_out.stdout }}"
+
+- when: inventory_hostname in groups.nomad_clients
+  set_fact:
+    vault_token: "{{ client_vault_token_out.stdout }}"
+
+- name: Copy server consul config template
+  ansible.builtin.template:
+    src: server_nomad_consul_creds.hcl.tpl.j2
+    dest: "{{ consul_template.data_dir }}/nomad_consul_creds.hcl.tpl"
+  when: inventory_hostname in groups.nomad_servers
+  notify: consul-template unit Restarted
+
+- name: Copy client consul config template
+  ansible.builtin.template:
+    src: client_nomad_consul_creds.hcl.tpl.j2
+    dest: "{{ consul_template.data_dir }}/nomad_consul_creds.hcl.tpl"
+  when: inventory_hostname in groups.nomad_clients
+  notify: consul-template unit Restarted
+
+- name: Copy consul-template config file
+  ansible.builtin.template:
+    src: nomad_consul_creds_ctmpl.hcl
+    dest: "{{ consul_template.config_dir }}/nomad_consul_creds_ctmpl.hcl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted

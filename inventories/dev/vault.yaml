@@ -1,0 +1,19 @@
+---
+all:
+  vars:
+    vault:
+      ui_host: vault-dev.peoplesmarkets.com
+      url: https://vault-dev.peoplesmarkets.com
+      certs_dir: /opt/vault/tls
+      config_dir: /etc/vault.d
+      data_dir: /opt/vault/data
+      ports:
+        https: 8200
+        cluster: 8201
+
+  children:
+    vault:
+      hosts:
+        euliania-dev.peoplesmarkets.com:
+        eudea-dev.peoplesmarkets.com:
+        eurelia-dev.peoplesmarkets.com:

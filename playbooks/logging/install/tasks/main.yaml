@@ -1,0 +1,24 @@
+---
+- name: Ensure working directory
+  ansible.builtin.file:
+    path: /tmp/vector/install
+    state: directory
+
+- name: Get log_shipper_api_key from HCPVS # HCP Vault Secrets
+  ansible.builtin.command: |
+    vlt secrets get \
+      -p {{ hcpvs.project_id }} \
+      -a service-cluster \
+      -plaintext graphana_log_shipper_api_key
+  register: log_shipper_api_key_out
+
+- set_fact:
+    log_shipper_api_key: "{{ log_shipper_api_key_out.stdout }}"
+
+- name: Prepare vector job file
+  ansible.builtin.template:
+    src: vector.nomad.j2
+    dest: /tmp/vector/install/vector.nomad
+
+- name: Deploy Vector nomad job
+  command: nomad job run /tmp/vector/install/vector.nomad

@@ -1,0 +1,57 @@
+vault {
+  address      = "{{ vault.url }}"
+  unwrap_token = false
+  renew_token  = true
+
+  token = "{{ vault_token }}"
+
+  ssl {
+    enabled = true
+    verify  = true
+  }
+}
+
+template {
+  source          = "{{ consul_template.data_dir }}/ca.crt.tpl"
+  destination     = "{{ cockroach.certs_dir }}/ca.crt"
+  left_delimiter  = "[["
+  right_delimiter = "]]"
+
+  user  = "cockroach"
+  group = "cockroach"
+  perms = 0700
+
+  exec {
+    command = ["systemctl", "restart", "cockroach"]
+  }
+}
+
+template {
+  source          = "{{ consul_template.data_dir }}/node.crt.tpl"
+  destination     = "{{ cockroach.certs_dir }}/node.crt"
+  left_delimiter  = "[["
+  right_delimiter = "]]"
+
+  user  = "cockroach"
+  group = "cockroach"
+  perms = 0700
+
+  exec {
+    command = ["systemctl", "restart", "cockroach"]
+  }
+}
+
+template {
+  source          = "{{ consul_template.data_dir }}/node.key.tpl"
+  destination     = "{{ cockroach.certs_dir }}/node.key"
+  left_delimiter  = "[["
+  right_delimiter = "]]"
+
+  user  = "cockroach"
+  group = "cockroach"
+  perms = 0700
+
+  exec {
+    command = ["systemctl", "restart", "cockroach"]
+  }
+}

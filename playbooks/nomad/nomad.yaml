@@ -1,0 +1,30 @@
+---
+- name: Install Nomad
+  import_playbook: install.yaml
+  tags:
+    - install
+
+- name: Configure Nomad agents
+  import_playbook: configure.yaml
+  tags:
+    - configure
+
+- name: Configure nomad ACL
+  import_playbook: acl.yaml
+  tags:
+    - acl
+
+- name: Integrate with vault
+  import_playbook: vault.yaml
+  tags:
+    - vault
+
+- name: Integrate with consul
+  import_playbook: consul.yaml
+  tags:
+    - consul
+
+- name: Configure mTLS
+  import_playbook: tls.yaml
+  tags:
+    - tls

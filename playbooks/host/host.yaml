@@ -1,0 +1,4 @@
+---
+- import_playbook: configure.yaml
+  tags:
+    - configure

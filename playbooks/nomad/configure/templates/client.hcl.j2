@@ -1,0 +1,16 @@
+client {
+  enabled = true
+
+  network_interface = "{{ ansible_eth1.device }}"
+
+  host_volume "docker-sock-ro" {
+    path = "/var/run/docker.sock"
+    read_only = true
+  }
+}
+
+plugin "docker" {
+  config {
+    extra_labels = ["job_name", "task_group_name", "task_name", "namespace", "node_name"]
+  }
+}

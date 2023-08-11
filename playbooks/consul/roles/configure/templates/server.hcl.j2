@@ -1,0 +1,11 @@
+node_name = "server-{{ inventory_hostname.split('.')[0] }}"
+
+## Server specific configuration for {{ data_center }}
+server = true
+bootstrap_expect = {{ groups.consul_servers | length }}
+
+## UI configuration (1.9+)
+ui_config {
+  enabled = true
+  content_path = "/consul/"
+}

@@ -1,0 +1,14 @@
+- name: Install gpg
+  ansible.builtin.apt:
+    name: gpg
+    state: latest
+
+- name: Add HashiCorp GPG key
+  ansible.builtin.apt_key:
+    url: https://apt.releases.hashicorp.com/gpg
+    state: present
+
+- name: Add specified repository into sources list
+  ansible.builtin.apt_repository:
+    repo: deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_lsb.codename|lower }} main
+    state: present

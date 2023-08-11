@@ -1,0 +1,8 @@
+---
+- name: Cockroach Restarted
+  throttle: 1
+  ansible.builtin.service:
+    name: cockroach
+    state: restarted
+    enabled: true
+    daemon_reload: true

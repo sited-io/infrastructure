@@ -1,0 +1,14 @@
+---
+- name: Ensure systemd resolved config dir
+  ansible.builtin.file:
+    path: "{{ systemd_resolved_config_dir }}"
+    state: directory
+
+- name: Copy consul dns config to systemd resolved config dir
+  ansible.builtin.copy:
+    src: consul.conf
+    dest: "{{ systemd_resolved_config_dir }}/consul.conf"
+    owner: root
+    group: root
+    mode: "644"
+  notify: Systemd Resolved Restarted

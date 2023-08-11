@@ -1,0 +1,24 @@
+---
+- ansible.builtin.import_tasks: ../hashicorp_repository/hashicorp_repository.yaml
+
+- name: Install consul-template
+  ansible.builtin.apt:
+    name: consul-template
+    state: latest
+    update_cache: true
+
+- name: Ensure consul-template directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "770"
+  with_items:
+    - "{{ consul_template.data_dir }}"
+    - "{{ consul_template.config_dir }}"
+
+- name: Copy consul-template service
+  ansible.builtin.template:
+    src: "consul-template@.service.j2"
+    dest: "{{ systemd_dir }}/consul-template@.service"

@@ -1,0 +1,40 @@
+---
+- name: Ensure Nomad directories exists
+  ansible.builtin.file:
+    path: "{{ item }}/"
+    state: directory
+    owner: nomad
+    group: nomad
+    mode: 0755
+  with_items:
+    - "{{ nomad.data_dir }}"
+    - "{{ nomad.config_dir }}"
+
+- name: Copy common nomad config file
+  ansible.builtin.template:
+    src: nomad.hcl.j2
+    dest: "{{ nomad.config_dir }}/nomad.hcl"
+    owner: nomad
+    group: nomad
+    mode: 0644
+  notify: Nomad Restarted
+
+- name: Copy server config file
+  ansible.builtin.template:
+    src: server.hcl.j2
+    dest: "{{ nomad.config_dir }}/server.hcl"
+    owner: nomad
+    group: nomad
+    mode: 0644
+  notify: Nomad Reloaded
+  when: inventory_hostname in groups.nomad_servers
+
+- name: Copy client config file
+  ansible.builtin.template:
+    src: client.hcl.j2
+    dest: "{{ nomad.config_dir }}/client.hcl"
+    owner: nomad
+    group: nomad
+    mode: 0644
+  notify: Nomad Reloaded
+  when: inventory_hostname in groups.nomad_clients

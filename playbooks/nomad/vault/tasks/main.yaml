@@ -1,0 +1,59 @@
+---
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/nomad/vault
+        state: directory
+
+    - name: Copy nomad vault policy to working directory
+      ansible.builtin.copy:
+        src: nomad-server.policy.hcl
+        dest: /tmp/nomad/vault/nomad-server.policy.hcl
+
+    - name: Write policy to vault
+      ansible.builtin.command: |
+        vault policy write nomad-server \
+          /tmp/nomad/vault/nomad-server.policy.hcl
+
+    - name: Create token role for nomad cluster
+      ansible.builtin.command: |
+        vault write /auth/token/roles/nomad-cluster \
+          disallowed_policies=nomad-server \
+          token_explicit_max_ttl=0 \
+          orphan=true \
+          token_period=259200 \
+          renewable=true
+
+    - name: Create token for nomad server
+      ansible.builtin.command: |
+        vault token create -field=token \
+          -policy=nomad-server \
+          -period=72h \
+          -orphan
+      register: vault_token_out
+
+- set_fact:
+    vault_token: "{{ vault_token_out.stdout }}"
+
+- name: Copy vault config for nomad
+  ansible.builtin.template:
+    src: server-vault.hcl.j2
+    dest: "{{ nomad.config_dir }}/vault.hcl"
+    owner: nomad
+    group: nomad
+    mode: "440"
+  when: inventory_hostname in groups.nomad_servers
+  notify: Nomad Reloaded
+
+- name: Copy vault config for nomad
+  ansible.builtin.template:
+    src: client-vault.hcl.j2
+    dest: "{{ nomad.config_dir }}/vault.hcl"
+    owner: nomad
+    group: nomad
+    mode: "440"
+  when: inventory_hostname in groups.nomad_clients
+  notify: Nomad Reloaded

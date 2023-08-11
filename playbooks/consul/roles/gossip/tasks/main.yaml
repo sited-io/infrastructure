@@ -1,0 +1,89 @@
+---
+- ansible.builtin.import_tasks: ../consul-template/consul-template.yaml
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/consul/gossip
+        state: directory
+
+    - name: Ensure vault kv is enabled
+      ansible.builtin.command: |
+        vault secrets enable kv
+      register: enable_kv2_out
+      failed_when: enable_kv2_out.rc != 0 and 'path is already in use' not in enable_kv2_out.stderr
+
+    - name: Generate gossip encryption key
+      ansible.builtin.command: consul keygen
+      register: gossip_key_out
+
+    - set_fact:
+        gossip_key: "{{ gossip_key_out.stdout }}"
+
+    - name: Save gossip key to vault
+      ansible.builtin.command: |
+        vault write kv/consul/config/encryption \
+          key={{ gossip_key }}
+
+    - name: Copy renew-consul-gossip policy to working directory
+      ansible.builtin.copy:
+        src: renew-consul-gossip-key.policy.hcl
+        dest: /tmp/consul/gossip/renew-consul-gossip-key.policy.hcl
+
+    - name: Create policy
+      ansible.builtin.command:
+        vault policy write renew-consul-gossip-key \
+          /tmp/consul/gossip/renew-consul-gossip-key.policy.hcl
+    
+    - name: Get vault token
+      ansible.builtin.command:
+        vault token create -field=token \
+          -policy=renew-consul-gossip-key \
+          -period=24h
+      register: vault_token_out
+
+- set_fact:
+    vault_token: "{{ vault_token_out.stdout }}"
+
+- name: Ensure jq is installed
+  ansible.builtin.apt:
+    name: jq
+    state: latest
+    update_cache: true
+
+- name: Copy gossip key consul template config
+  ansible.builtin.template:
+    src: consul_gossip_ctmpl.hcl
+    dest: "{{ consul_template.config_dir }}/consul_gossip_ctmpl.hcl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted
+
+- name: Copy consul server token template
+  ansible.builtin.copy:
+    src: consul-server.token.tpl
+    dest: "{{ consul_template.data_dir }}/consul-server.token.tpl"
+  notify: consul-template unit Restarted
+
+- name: Copy gossip key template
+  ansible.builtin.copy:
+    src: gossip.key.tpl
+    dest: "{{ consul_template.data_dir }}/gossip.key.tpl"
+  notify: consul-template unit Restarted
+
+- name: Ensure gossip directory
+  ansible.builtin.file:
+    path: "/opt/consul/gossip"
+    state: directory
+  notify: consul-template unit Restarted
+
+- name: Copy rotate script
+  ansible.builtin.template:
+    src: rotate.sh
+    dest: "/opt/consul/gossip/rotate_key.sh"
+    mode: 0774
+  notify: consul-template unit Restarted

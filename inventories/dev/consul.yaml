@@ -1,0 +1,41 @@
+---
+all:
+  vars:
+    consul:
+      domain: consul
+      ui_host: consul-dev.peoplesmarkets.com
+      url: https://consul-dev.peoplesmarkets.com
+      data_dir: /var/lib/consul
+      config_dir: /etc/consul.d
+      certs_dir: /etc/consul.d/certs
+      policy_dir: /etc/consul.d/policies
+      dns_recursor: 1.1.1.1 # Cloudflare
+      envoy_version: "1.26.4"
+      ports:
+        dns: 8600
+        http: 8500
+        https: 8501
+        grpc: 8502
+        grpc_tls: 8503
+        serf_lan: 8301
+        serf_wan: 8302
+        server: 8300
+        sidecar_min_port: 21000
+        sidecar_max_port: 21255
+
+  children:
+    consul:
+      children:
+        consul_servers:
+          hosts:
+            euliania-dev.peoplesmarkets.com:
+            eudea-dev.peoplesmarkets.com:
+            eurelia-dev.peoplesmarkets.com:
+        consul_clients:
+          hosts:
+            euria-dev.peoplesmarkets.com:
+            eudokia-dev.peoplesmarkets.com:
+            eudel-dev.peoplesmarkets.com:
+            euri-dev.peoplesmarkets.com:
+            eugene-dev.peoplesmarkets.com:
+            euclid-dev.peoplesmarkets.com:

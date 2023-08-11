@@ -1,0 +1,51 @@
+---
+- name: Ensure consul directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: consul
+    group: consul
+    mode: "774"
+  with_items:
+    - "{{ consul.data_dir }}"
+    - "{{ consul.config_dir }}"
+    - "{{ consul.certs_dir }}"
+    - "{{ consul.policy_dir }}"
+
+- name: Generate initial encryption key
+  run_once: true
+  delegate_to: localhost
+  become: false
+  ansible.builtin.command: consul keygen
+  register: gossip_encryption_key_out
+
+- set_fact:
+    gossip_encryption_key: "{{ gossip_encryption_key_out.stdout }}"
+
+- name: Copy common config file
+  ansible.builtin.template:
+    src: "consul.hcl.j2"
+    dest: "{{ consul.config_dir }}/consul.hcl"
+    owner: consul
+    group: consul
+    mode: "664"
+
+- name: Copy server specific config file
+  when: inventory_hostname in groups.consul_servers
+  ansible.builtin.template:
+    src: "server.hcl.j2"
+    dest: "{{ consul.config_dir }}/server.hcl"
+    owner: consul
+    group: consul
+    mode: "664"
+  notify: Consul Restarted
+
+- name: Copy client specific config file
+  when: inventory_hostname in groups.consul_clients
+  ansible.builtin.template:
+    src: "client.hcl.j2"
+    dest: "{{ consul.config_dir }}/client.hcl"
+    owner: consul
+    group: consul
+    mode: "664"
+  notify: Consul Restarted

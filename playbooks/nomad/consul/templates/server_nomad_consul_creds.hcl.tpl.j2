@@ -1,0 +1,7 @@
+[[ with secret "consul/creds/nomad_server_role" ]]
+consul {
+  address = "{{ ansible_eth1.ipv4.address }}:{{ consul.ports.http }}"
+  grpc_address = "{{ ansible_eth1.ipv4.address }}:{{ consul.ports.grpc }}"
+  token   = "[[ .Data.token ]]"
+}
+[[ end ]]

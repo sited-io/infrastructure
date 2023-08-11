@@ -1,0 +1,44 @@
+job "cockroach-gateway" {
+  datacenters = ["{{ data_center }}"]
+
+  type = "service"
+
+  group "cockroach-gateway" {
+    network {
+      mode = "bridge"
+
+      port "sql" {
+        to = {{ cockroach.ports.sql }}
+        static = {{ cockroach.ports.external_sql }}
+      }
+    }
+
+    service {
+      name = "cockroach-sql-gateway"
+      port = "sql"
+
+      connect {
+        gateway {
+          proxy {}
+
+          ingress {
+            listener {
+              port = {{ cockroach.ports.sql }}
+              protocol = "tcp"
+              service {
+                name = "cockroach-sql"
+              }
+            }            
+          }
+        }
+      }
+
+      check {
+        type = "tcp"
+        port = "sql"
+        interval = "10s"
+        timeout  = "1s"
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+---
+all:
+  vars:
+    nomad:
+      ui_host: nomad-dev.peoplesmarkets.com
+      url: https://nomad-dev.peoplesmarkets.com
+      data_dir: /var/lib/nomad
+      config_dir: /etc/nomad.d
+      certs_dir: /etc/nomad.d/certs
+      policy_dir: /etc/nomad.d/policies
+      cni_plugin_dir: /opt/cni/bin
+      cni_plugin_url: https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-amd64-v1.3.0.tgz
+      podman_driver_url: https://releases.hashicorp.com/nomad-driver-podman/0.4.2/nomad-driver-podman_0.4.2_linux_amd64.zip
+      ports:
+        http: 4646
+        rpc: 4647
+        serf: 4648
+
+  children:
+    nomad:
+      children:
+        nomad_servers:
+          hosts:
+            euliania-dev.peoplesmarkets.com:
+            eudea-dev.peoplesmarkets.com:
+            eurelia-dev.peoplesmarkets.com:
+        nomad_clients:
+          hosts:
+            euria-dev.peoplesmarkets.com:
+            eudokia-dev.peoplesmarkets.com:
+            eudel-dev.peoplesmarkets.com:

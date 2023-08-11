@@ -1,0 +1,105 @@
+---
+- name: Get certificates
+  run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Get root CA certificate from HCPVS # HCP Vault Secrets
+      ansible.builtin.command: |
+        vlt secrets get \
+          -p {{ hcpvs.project_id }} \
+          -a vault \
+          -plaintext ssl_ca_certificate
+      register: ssl_ca_certificate_out
+
+    - name: Get vault certificate key from HCPVS
+      ansible.builtin.command: |
+        vlt secrets get \
+          -p {{ hcpvs.project_id }} \
+          -a vault \
+          -plaintext ssl_certificate_key
+      register: ssl_certificate_key_out
+
+    - name: Get vault certificate from HCPVS
+      ansible.builtin.command: |
+        vlt secrets get \
+          -p {{ hcpvs.project_id }} \
+          -a vault \
+          -plaintext ssl_certificate
+      register: ssl_certificate_out
+
+- name: Ensure vault config dir
+  ansible.builtin.file:
+    path: "{{ vault.config_dir }}"
+    state: directory
+
+- name: Ensure certificate directory
+  ansible.builtin.file:
+    path: "{{ vault.certs_dir }}"
+    state: directory
+    mode: 0775
+
+- name: Copy CA certificate
+  ansible.builtin.copy:
+    content: "{{ ssl_ca_certificate_out.stdout }}"
+    dest: "{{ vault.certs_dir }}/vault-ca.pem"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy vault certificate
+  ansible.builtin.copy:
+    content: "{{ ssl_certificate_key_out.stdout }}"
+    dest: "{{ vault.certs_dir }}/vault-key.pem"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy vault certificate key
+  ansible.builtin.copy:
+    content: "{{ ssl_certificate_out.stdout }}"
+    dest: "{{ vault.certs_dir }}/vault-cert.pem"
+    owner: root
+    group: vault
+    mode: 0640
+
+- set_fact:
+    other_hosts: "{{ groups.vault | difference([inventory_hostname]) | list }}"
+
+- name: Copy vault config file
+  ansible.builtin.template:
+    src: vault.hcl.j2
+    dest: "{{ vault.config_dir }}/vault.hcl"
+    owner: vault
+    group: vault
+    mode: 0664
+
+- name: Check vault unsealed
+  run_once: true
+  delegate_to: localhost
+  become: false
+  ansible.builtin.command: vault status -format=json
+  register: status_out
+  ignore_errors: true
+
+- set_fact:
+    sealed: "{{ (status_out.stdout | from_json | json_query('sealed')) if status_out.rc == 0 else true }}"
+
+- name: Ensure vault started and enabled
+  ansible.builtin.service:
+    name: vault
+    state: restarted
+    enabled: true
+  when: sealed
+
+# sudo vault operator init --address https://<private-ip-address>:8200 -ca-cert /opt/vault/tls/vault-ca.pem -client-cert /opt/vault/tls/vault-cert.pem -client-key /opt/vault/tls/vault-key.pem
+# sudo vault operator init --address https://10.0.0.9:8200 -ca-cert /opt/vault/tls/vault-ca.pem -client-cert /opt/vault/tls/vault-cert.pem -client-key /opt/vault/tls/vault-key.pem
+
+# save token as "initial_root_token"
+
+# sudo vault operator unseal --address https://<private_ip_address>:8200 -ca-cert /opt/vault/tls/vault-ca.pem -client-cert /opt/vault/tls/vault-cert.pem -client-key /opt/vault/tls/vault-key.pem
+# sudo vault operator unseal --address https://10.0.0.9:8200 -ca-cert /opt/vault/tls/vault-ca.pem -client-cert /opt/vault/tls/vault-cert.pem -client-key /opt/vault/tls/vault-key.pem
+
+- name: Manually init and unseal vault if not initialized yet
+  pause:
+    prompt: Login to one vault server and run the init comman. Save Unseal keys to HCPVS.

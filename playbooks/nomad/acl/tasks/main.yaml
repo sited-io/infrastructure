@@ -1,0 +1,50 @@
+---
+- name: Ensure Nomad policies directory
+  ansible.builtin.file:
+    path: "{{ nomad.policy_dir }}/"
+    state: directory
+    owner: nomad
+    group: nomad
+    mode: "755"
+
+- name: Copy nomad acl config
+  ansible.builtin.copy:
+    src: acl.hcl
+    dest: "{{ nomad.config_dir }}/acl.hcl"
+    owner: nomad
+    group: nomad
+    mode: "444"
+  notify: Nomad Reloaded
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Initialize ACL and get bootstrap_token
+      command: nomad acl bootstrap -json
+      register: acl_bootstrap_out
+      ignore_errors: true
+
+    - name: Enable nomad secret engine on vault
+      ansible.builtin.command: vault secrets enable nomad
+      register: enable_nomad
+      failed_when: enable_nomad.rc != 0 and 'already in use' not in enable_nomad.stderr
+
+    - name: Configure nomad secret engine
+      ansible.builtin.command: |
+        vault write nomad/config/access \
+          address={{ nomad.url }} \
+          token={{ acl_bootstrap_out.stdout | from_json | json_query('SecretID') }}
+      when: acl_bootstrap_out.rc == 0
+
+    - name: Save bootstrap token to vault
+      ansible.builtin.command: |
+        vault write kv/root/nomad/bootstrap_token \
+          token={{ acl_bootstrap_out.stdout | from_json | json_query('SecretID') }}
+      when: acl_bootstrap_out.rc == 0
+
+    - name: Create management role
+      ansible.builtin.command: |
+        vault write nomad/role/global_management_role \
+          type=management \
+          global=true

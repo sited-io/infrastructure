@@ -1,0 +1,50 @@
+vault {
+  address      = "{{ vault.url }}"
+  unwrap_token = false
+  renew_token  = true
+
+  token        = "{{ vault_token }}"
+
+  ssl {
+    enabled = true
+    verify  = true
+  }
+}
+
+template {
+  source          = "{{ consul_template.data_dir }}/nomad-agent-ca.pem.tpl"
+  destination     = "{{ nomad.certs_dir }}/nomad-agent-ca.pem"
+  perms           = 0774
+  left_delimiter  = "[["
+  right_delimiter = "]]"
+
+  exec {
+    command = ["systemctl", "reload", "nomad"]
+  }
+}
+
+template {
+  source          = "{{ consul_template.data_dir }}/nomad-agent-cert.pem.tpl"
+  destination     = "{{ nomad.certs_dir }}/nomad-agent-cert.pem"
+  perms           = 0774
+  left_delimiter  = "[["
+  right_delimiter = "]]"
+
+  exec {
+    command = ["systemctl", "reload", "nomad"]
+  }
+}
+
+template {
+  source          = "{{ consul_template.data_dir }}/nomad-agent-key.pem.tpl"
+  destination     = "{{ nomad.certs_dir }}/nomad-agent-key.pem"
+  perms           = 0770
+  left_delimiter  = "[["
+  right_delimiter = "]]"
+
+  exec {
+    command = ["systemctl", "reload", "nomad"]
+  }
+}
+
+

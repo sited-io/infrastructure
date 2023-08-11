@@ -1,0 +1,6 @@
+---
+- name: consul-template unit Restarted
+  ansible.builtin.service:
+    name: consul-template@nomad_agent_tls_ctmpl.service
+    state: restarted
+    enabled: true

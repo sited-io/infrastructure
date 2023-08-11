@@ -1,0 +1,23 @@
+[Unit]
+Description=Cockroach Database cluster node
+Requires=network.target
+
+[Service]
+Type=notify
+WorkingDirectory={{ cockroach.lib_dir }}
+ExecStart={{ cockroach.bin_dir }}/cockroach start \
+    --certs-dir={{ cockroach.certs_dir }} \
+    --listen-addr={{ ansible_eth1.ipv4.address }}:{{ cockroach.ports.listen }} \
+    --sql-addr=127.0.0.1:{{ cockroach.ports.sql }} \
+    --http-addr={{ ansible_eth1.ipv4.address }}:{{ cockroach.ports.http }} \
+    --accept-sql-without-tls \
+    --join={{ join_with }} \
+    --cache=.25 \
+    --max-sql-memory=.25
+TimeoutStopSec=300
+Restart=always
+RestartSec=10
+User=cockroach
+
+[Install]
+WantedBy=default.target

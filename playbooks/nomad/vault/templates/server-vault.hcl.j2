@@ -1,0 +1,6 @@
+vault {
+  enabled          = true
+  address          = "{{ vault.url }}"
+  create_from_role = "nomad-cluster"
+  token            = "{{ vault_token }}"
+}

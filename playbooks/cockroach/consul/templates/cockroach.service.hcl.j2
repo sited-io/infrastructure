@@ -1,0 +1,13 @@
+services {
+  name = "cockroach-sql"
+
+  port = {{ cockroach.ports.sql }}
+
+  tags = ["cockroach"]
+
+  token = "{{ consul_token }}"
+
+  connect {
+    sidecar_service {}
+  }
+}

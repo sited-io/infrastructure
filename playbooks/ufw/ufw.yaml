@@ -1,0 +1,17 @@
+---
+- name: Install UFW
+  ansible.builtin.apt:
+    package: ufw
+    state: latest
+    update_cache: true
+
+- name: Configure firewall deny everything
+  community.general.ufw:
+    direction: incoming
+    policy: deny
+
+- name: Configure firewall allow SSH and enable
+  community.general.ufw:
+    rule: allow
+    name: OpenSSH
+    state: enabled

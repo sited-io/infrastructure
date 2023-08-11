@@ -1,0 +1,12 @@
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+subjectAltName = @alt_names
+
+[alt_names]
+{% for hostname in groups.vault %}
+IP.{{ loop.index }} = {{ hostvars[hostname].ansible_eth1.ipv4.address }}
+{% endfor %}
+{% for hostname in groups.vault %}
+DNS.{{ loop.index }} = {{ hostname }}
+{% endfor %}

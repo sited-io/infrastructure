@@ -1,0 +1,69 @@
+---
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/cockroach/init
+        state: directory
+
+    - name: Get root client certificate and key
+      ansible.builtin.command: |
+        vault read -format=json kv/cockroach/clients/root
+      register: root_client_certificate_out
+
+    - name: Check global_management password exsits in vault
+      ansible.builtin.command: |
+        vault read -field=password kv/cockroach/clients/global_management
+      register: global_management_password_out
+      ignore_errors: true
+
+    - when: global_management_password_out.rc != 0
+      set_fact:
+        global_management_password: "{{ 999999999999999 | random | to_uuid }}"
+
+    - name: Save generated password to vault
+      ansible.builtin.command: |
+        vault write kv/cockroach/clients/global_management \
+          password={{ global_management_password }}
+      when: global_management_password_out.rc != 0
+
+    - name: Get global_management password from vault
+      ansible.builtin.command: |
+        vault read -field=password kv/cockroach/clients/global_management
+      register: global_management_password_out
+
+    - set_fact:
+        global_management_password: "{{ global_management_password_out.stdout }}"
+
+- run_once: true
+  delegate_to: "{{ groups.cockroach[0] }}"
+  block:
+    - name: Copy certificate to working directory
+      ansible.builtin.copy:
+        content: "{{ root_client_certificate_out.stdout | from_json | json_query('data.certificate') }}"
+        dest: "{{ cockroach.certs_dir }}/client.root.crt"
+        mode: "700"
+
+    - name: Copy certificate to working directory
+      ansible.builtin.copy:
+        content: "{{ root_client_certificate_out.stdout | from_json | json_query('data.key') }}"
+        dest: "{{ cockroach.certs_dir }}/client.root.key"
+        mode: "700"
+
+    - name: Initialize cockroach cluster
+      ansible.builtin.command: |
+        cockroach init \
+          --host {{ ansible_eth1.ipv4.address }}:{{ cockroach.ports.listen }} \
+          --certs-dir {{ cockroach.certs_dir }}
+      register: init_out
+      failed_when: init_out.rc != 0 and 'already been initialized' not in init_out.stderr
+
+    - name: Create management user on cockroach
+      ansible.builtin.command: |
+        cockroach sql \
+          --url postgresql://root@{{ ansible_eth1.ipv4.address }}:{{ cockroach.ports.sql }}/defaultdb?sslrootcert={{ cockroach.certs_dir }}/ca.crt&sslcert={{ cockroach.certs_dir }}/client.root.crt&sslkey={{ cockroach.certs_dir }}/client.root.key&sslmode=verify-full \
+          --execute "CREATE USER IF NOT EXISTS global_management WITH PASSWORD '{{ global_management_password }}';" \
+          --execute "ALTER USER global_management WITH PASSWORD '{{ global_management_password }}';" \
+          --execute "GRANT admin TO global_management;"

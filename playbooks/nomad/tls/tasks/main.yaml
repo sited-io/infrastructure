@@ -1,0 +1,183 @@
+---
+- ansible.builtin.import_tasks: ../consul-template/consul-template.yaml
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/nomad/tls
+        state: directory
+
+    - name: Ensure nomad pki secret engine enabled on vault
+      ansible.builtin.command: |
+        vault secrets enable --path=pki/nomad pki
+      register: enable_pki_out
+      failed_when: enable_pki_out.rc != 0 and 'already in use' not in enable_pki_out.stderr
+
+    - name: Increase maximum TTL for issueing certificates
+      ansible.builtin.command: |
+        vault secrets tune -max-lease-ttl=87600h pki/nomad
+
+    - name: Configure CA and CRL urls
+      ansible.builtin.command: |
+        vault write pki/nomad/config/urls \
+          issuing_certificates="https://{{ vault.ui_host }}/v1/pki/ca" \
+          crl_distribution_points="https://{{ vault.ui_host }}/v1/pki/crl"
+
+    - name: Check if issuer for root CA exists
+      ansible.builtin.command: |
+        vault read pki/nomad/issuer/root-ca
+      register: check_issuer_out
+      ignore_errors: true
+
+    - name: Generate root CA
+      ansible.builtin.command: |
+        vault write -field=certificate \
+          pki/nomad/root/generate/internal \
+          common_name="{{ data_center }}.nomad" \
+          issuer_name="root-ca" \
+          ttl=87600h
+      when: check_issuer_out.rc != 0
+
+    - name: Ensure nomad pki-int secret engine enabled on vault
+      ansible.builtin.command: |
+        vault secrets enable -path=pki-int/nomad pki
+      register: enable_pki_int_out
+      failed_when: enable_pki_int_out.rc != 0 and 'already in use' not in enable_pki_int_out.stderr
+
+    - name: Increase maximum TTL for issueing certificates
+      ansible.builtin.command: |
+        vault secrets tune -max-lease-ttl=43800h pki-int/nomad
+
+    - name: Configure CA and CRL urls
+      ansible.builtin.command: |
+        vault write pki-int/nomad/config/urls \
+          issuing_certificates="https://{{ vault.ui_host }}/v1/pki/ca" \
+          crl_distribution_points="https://{{ vault.ui_host }}/v1/pki/crl"
+
+    - name: Configure auto tidy
+      ansible.builtin.command: |
+        vault write pki-int/nomad/config/auto-tidy \
+          enabled=true \
+          interval_duration=6h \
+          tidy_cert_store=true \
+          tidy_revoked_certs=true \
+          tidy_revoked_cert_issuer_associations=true \
+          tidy_expired_issuers=true \
+          tidy_move_legacy_ca_bundle=true \
+          tidy_revocation_queue=true \
+          issuer_safety_buffer=30d \
+          safety_buffer=24h
+
+    - name: Check if intermediate certificate issuers exist
+      ansible.builtin.command: |
+        vault list -format=json -detailed pki-int/nomad/issuers
+      register: int_issuers_out
+      failed_when: int_issuers_out.rc != 0 and int_issuers_out.rc != 2
+
+    - when: int_issuers_out.rc == 0
+      set_fact:
+        int_issuers_exist: "{{ (int_issuers_out.stdout | from_json | json_query('data.keys') | length) == 2 }}"
+
+    - when: int_issuers_out.rc != 0
+      set_fact:
+        int_issuers_exist: false
+
+    - when: not int_issuers_exist
+      block:
+        - name: Request an intermediate certificate signing request (CSR)
+          ansible.builtin.command: |
+            vault write -format=json \
+              pki-int/nomad/intermediate/generate/internal \
+              common_name="{{ data_center }}.nomad Intermediate Authority"
+          register: csr_out
+
+        - name: Save CSR to working directory
+          ansible.builtin.copy:
+            content: "{{ csr_out.stdout | from_json | json_query('data.csr') }}"
+            dest: /tmp/nomad/tls/pki_intermediate.csr
+
+        - name: Sign CSR
+          ansible.builtin.command: |
+            vault write -format=json \
+              pki/nomad/root/sign-intermediate \
+              csr=@/tmp/nomad/tls/pki_intermediate.csr \
+              format=pem_bundle \
+              ttl="43800h"
+          register: csr_sign_out
+
+        - name: Save certificate to working directory
+          ansible.builtin.copy:
+            content: "{{ csr_sign_out.stdout | from_json | json_query('data.certificate') }}"
+            dest: /tmp/nomad/tls/intermediate.cert.pem
+
+        - name: Import certificate to vault
+          ansible.builtin.command: |
+            vault write pki-int/nomad/intermediate/set-signed \
+              certificate=@/tmp/nomad/tls/intermediate.cert.pem
+
+    - name: Create vault role
+      ansible.builtin.command: |
+        vault write pki-int/nomad/roles/nomad-{{ data_center }} \
+          allowed_domains="{{ data_center }}.nomad" \
+          allow_subdomains=true \
+          generate_lease=true \
+          max_ttl="720h"
+
+    - name: Copy vault policy to working directory
+      ansible.builtin.template:
+        src: renew-nomad-agent-certs.policy.hcl.j2
+        dest: /tmp/nomad/tls/renew-nomad-agent-certs.policy.hcl
+
+    - name: Create policy
+      ansible.builtin.command: vault policy write renew-nomad-agent-certs \
+        /tmp/nomad/tls/renew-nomad-agent-certs.policy.hcl
+
+    - name: Get vault token
+      ansible.builtin.command: vault token create -field=token \
+        -policy=renew-nomad-agent-certs \
+        -period=24h
+      register: vault_token_out
+
+- set_fact:
+    vault_token: "{{ vault_token_out.stdout }}"
+
+- name: Copy CA template
+  ansible.builtin.template:
+    src: nomad-agent-ca.pem.tpl.j2
+    dest: "{{ consul_template.data_dir }}/nomad-agent-ca.pem.tpl"
+
+- name: Copy server certificate template
+  ansible.builtin.template:
+    src: nomad-agent-cert.pem.tpl.j2
+    dest: "{{ consul_template.data_dir }}/nomad-agent-cert.pem.tpl"
+
+- name: Copy server certificate key template
+  ansible.builtin.template:
+    src: nomad-agent-key.pem.tpl.j2
+    dest: "{{ consul_template.data_dir }}/nomad-agent-key.pem.tpl"
+
+- name: Ensure tls directory
+  ansible.builtin.file:
+    path: "/opt/nomad/tls"
+    state: directory
+
+- name: Copy nomad agent consul-template config file
+  ansible.builtin.template:
+    src: nomad_agent_tls_ctmpl.hcl.j2
+    dest: "{{ consul_template.config_dir }}/nomad_agent_tls_ctmpl.hcl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted
+
+- name: Copy nomad tls configurations
+  ansible.builtin.template:
+    src: agent.tls.hcl.j2
+    dest: "{{ nomad.config_dir }}/agent.tls.hcl"
+    owner: nomad
+    group: nomad
+    mode: 0664
+  notify: Nomad Restarted

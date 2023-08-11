@@ -1,0 +1,25 @@
+---
+all:
+  vars:
+    cockroach:
+      ui_host: cockroach-dev.peoplesmarkets.com
+      url: https://cockroach-dev.peoplesmarkets.com
+      bin_dir: /usr/local/bin
+      lib_dir: /usr/local/lib/cockroach
+      certs_dir: /usr/local/lib/cockroach/certs
+      binary_url: https://binaries.cockroachdb.com/cockroach-v23.1.6.linux-amd64.tgz
+      ports:
+        listen: 26257
+        http: 8080
+        sql: 5432
+        external_sql: 5433
+      roles:
+        - zitadel_admin
+        - zitadel_user
+
+  children:
+    cockroach:
+      hosts:
+        euri-dev.peoplesmarkets.com:
+        eugene-dev.peoplesmarkets.com:
+        euclid-dev.peoplesmarkets.com:

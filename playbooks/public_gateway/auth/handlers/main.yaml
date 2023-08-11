@@ -1,0 +1,6 @@
+---
+- name: consul-template unit Restarted
+  ansible.builtin.service:
+    name: consul-template@auth_conf_ctmpl.service
+    state: restarted
+    enabled: true

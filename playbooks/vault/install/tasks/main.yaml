@@ -1,0 +1,14 @@
+---
+- ansible.builtin.import_tasks: ../hashicorp_repository/hashicorp_repository.yaml
+
+- name: Install vault package
+  ansible.builtin.apt:
+    name: vault
+    state: latest
+    update_cache: true
+
+- name: Ensure vault service is enabled
+  ansible.builtin.service:
+    name: vault
+    state: started
+    enabled: true

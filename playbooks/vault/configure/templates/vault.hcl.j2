@@ -1,0 +1,27 @@
+cluster_addr  = "https://{{ ansible_eth1.ipv4.address }}:{{ vault.ports.cluster }}"
+api_addr      = "https://{{ ansible_eth1.ipv4.address }}:{{ vault.ports.https }}"
+disable_mlock = true
+ui            = true
+
+listener "tcp" {
+  address            = "{{ ansible_eth1.ipv4.address }}:{{ vault.ports.https }}"
+  tls_cert_file      = "{{ vault.certs_dir }}/vault-cert.pem"
+  tls_key_file       = "{{ vault.certs_dir }}/vault-key.pem"
+  tls_client_ca_file = "{{ vault.certs_dir }}/vault-ca.pem"
+}
+
+storage "raft" {
+  path    = "{{ vault.data_dir }}"
+  node_id = "{{ inventory_hostname }}"
+  {% for hostname in other_hosts %}
+
+  retry_join {
+    leader_tls_servername   = "{{ hostname }}"
+    leader_api_addr         = "https://{{ hostvars[hostname].ansible_eth1.ipv4.address }}:{{ vault.ports.https }}"
+    leader_ca_cert_file     = "{{ vault.certs_dir }}/vault-ca.pem"
+    leader_client_cert_file = "{{ vault.certs_dir }}/vault-cert.pem"
+    leader_client_key_file  = "{{ vault.certs_dir }}/vault-key.pem"
+  }
+  {% endfor %}
+
+}

@@ -1,0 +1,209 @@
+---
+- ansible.builtin.import_tasks: ../consul-template/consul-template.yaml
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/consul/tls
+        state: directory
+
+    - name: Ensure consul pki secret engine enabled on vault
+      ansible.builtin.command: |
+        vault secrets enable --path=pki/consul pki
+      register: enable_pki_out
+      failed_when: enable_pki_out.rc != 0 and 'already in use' not in enable_pki_out.stderr
+
+    - name: Increase maximum TTL for issueing certificates
+      ansible.builtin.command: |
+        vault secrets tune -max-lease-ttl=87600h pki/consul
+
+    - name: Configure CA and CRL urls
+      ansible.builtin.command: |
+        vault write pki/consul/config/urls \
+          issuing_certificates="https://{{ vault.ui_host }}/v1/pki/ca" \
+          crl_distribution_points="https://{{ vault.ui_host }}/v1/pki/crl"
+
+    - name: Check if issuer for root CA exists
+      ansible.builtin.command: |
+        vault read pki/consul/issuer/root-ca
+      register: check_issuer_out
+      ignore_errors: true
+
+    - name: Generate root CA
+      ansible.builtin.command: |
+        vault write -field=certificate \
+          pki/consul/root/generate/internal \
+          common_name="{{ data_center }}.consul" \
+          issuer_name="root-ca" \
+          ttl=87600h
+      when: check_issuer_out.rc != 0
+
+    - name: Ensure consul pki-int secret engine enabled on vault
+      ansible.builtin.command: |
+        vault secrets enable -path=pki-int/consul pki
+      register: enable_pki_int_out
+      failed_when: enable_pki_int_out.rc != 0 and 'already in use' not in enable_pki_int_out.stderr
+
+    - name: Increase maximum TTL for issueing certificates
+      ansible.builtin.command: |
+        vault secrets tune -max-lease-ttl=43800h pki-int/consul
+
+    - name: Configure CA and CRL urls
+      ansible.builtin.command: |
+        vault write pki-int/consul/config/urls \
+          issuing_certificates="https://{{ vault.ui_host }}/v1/pki/ca" \
+          crl_distribution_points="https://{{ vault.ui_host }}/v1/pki/crl"
+
+    - name: Configure auto tidy
+      ansible.builtin.command: |
+        vault write pki-int/consul/config/auto-tidy \
+          enabled=true \
+          interval_duration=6h \
+          tidy_cert_store=true \
+          tidy_revoked_certs=true \
+          tidy_revoked_cert_issuer_associations=true \
+          tidy_expired_issuers=true \
+          tidy_move_legacy_ca_bundle=true \
+          tidy_revocation_queue=true \
+          issuer_safety_buffer=30d \
+          safety_buffer=24h
+
+    - name: Check if intermediate certificate issuers exist
+      ansible.builtin.command: |
+        vault list -format=json -detailed pki-int/consul/issuers
+      register: int_issuers_out
+      failed_when: int_issuers_out.rc != 0 and int_issuers_out.rc != 2
+
+    - when: int_issuers_out.rc == 0
+      set_fact:
+        int_issuers_exist: "{{ (int_issuers_out.stdout | from_json | json_query('data.keys') | length) == 2 }}"
+
+    - when: int_issuers_out.rc != 0
+      set_fact:
+        int_issuers_exist: false
+
+    - when: not int_issuers_exist
+      block:
+        - name: Request an intermediate certificate signing request (CSR)
+          ansible.builtin.command: |
+            vault write -format=json \
+              pki-int/consul/intermediate/generate/internal \
+              common_name="{{ data_center }}.consul Intermediate Authority"
+          register: csr_out
+
+        - name: Save CSR to working directory
+          ansible.builtin.copy:
+            content: "{{ csr_out.stdout | from_json | json_query('data.csr') }}"
+            dest: /tmp/consul/tls/pki_intermediate.csr
+
+        - name: Sign CSR
+          ansible.builtin.command: |
+            vault write -format=json \
+              pki/consul/root/sign-intermediate \
+              csr=@/tmp/consul/tls/pki_intermediate.csr \
+              format=pem_bundle \
+              ttl="43800h"
+          register: csr_sign_out
+
+        - name: Save certificate to working directory
+          ansible.builtin.copy:
+            content: "{{ csr_sign_out.stdout | from_json | json_query('data.certificate') }}"
+            dest: /tmp/consul/tls/intermediate.cert.pem
+
+        - name: Import certificate to vault
+          ansible.builtin.command: |
+            vault write pki-int/consul/intermediate/set-signed \
+              certificate=@/tmp/consul/tls/intermediate.cert.pem
+
+    - name: Create vault role
+      ansible.builtin.command: |
+        vault write pki-int/consul/roles/consul-{{ data_center }} \
+          allowed_domains="{{ data_center }}.consul" \
+          allow_subdomains=true \
+          generate_lease=true \
+          max_ttl="720h"
+
+    - name: Copy vault policy to working directory
+      ansible.builtin.copy:
+        src: renew-consul-agent-certs.policy.hcl
+        dest: /tmp/consul/tls/renew-consul-agent-certs.policy.hcl
+    
+    - name: Create policy
+      ansible.builtin.command:
+        vault policy write renew-consul-agent-certs \
+          /tmp/consul/tls/renew-consul-agent-certs.policy.hcl
+    
+    - name: Get vault token
+      ansible.builtin.command:
+        vault token create -field=token \
+          -policy=renew-consul-agent-certs \
+          -period=24h
+      register: vault_token_out
+
+- set_fact:
+    vault_token: "{{ vault_token_out.stdout }}"
+
+- name: Copy CA template
+  ansible.builtin.template:
+    src: ca.crt.tpl.j2
+    dest: "{{ consul_template.data_dir }}/ca.crt.tpl"
+
+- name: Copy server certificate template
+  ansible.builtin.template:
+    src: server.crt.tpl.j2
+    dest: "{{ consul_template.data_dir }}/server.crt.tpl"
+  when: inventory_hostname in groups.consul_servers
+
+- name: Copy server certificate key template
+  ansible.builtin.template:
+    src: server.key.tpl.j2
+    dest: "{{ consul_template.data_dir }}/server.key.tpl"
+  when: inventory_hostname in groups.consul_servers
+
+- name: Ensure tls directory
+  ansible.builtin.file:
+    path: "/opt/consul/tls"
+    state: directory
+
+- name: Copy server consul-template config file
+  ansible.builtin.template:
+    src: server_consul_agent_tls_ctmpl.hcl.j2
+    dest: "{{ consul_template.config_dir }}/consul_agent_tls_ctmpl.hcl"
+    owner: root
+    group: root
+    mode: "440"
+  when: inventory_hostname in groups.consul_servers
+  notify: consul-template unit Restarted
+
+- name: Copy client consul-template config file
+  ansible.builtin.template:
+    src: client_consul_agent_tls_ctmpl.hcl.j2
+    dest: "{{ consul_template.config_dir }}/consul_agent_tls_ctmpl.hcl"
+    owner: root
+    group: root
+    mode: "440"
+  when: inventory_hostname in groups.consul_clients
+  notify: consul-template unit Restarted
+
+- name: Copy server tls configurations
+  ansible.builtin.template:
+    src: server.tls.hcl.j2
+    dest: "{{ consul.config_dir }}/server.tls.hcl"
+    owner: consul
+    group: consul
+    mode: 0664
+  when: inventory_hostname in groups.consul_servers
+  notify: consul-template unit Restarted
+
+- name: Copy client tls configurations
+  ansible.builtin.template:
+    src: client.tls.hcl.j2
+    dest: "{{ consul.config_dir }}/client.tls.hcl"
+    owner: consul
+    group: consul
+    mode: 0664
+  when: inventory_hostname in groups.consul_clients
+  notify: consul-template unit Restarted

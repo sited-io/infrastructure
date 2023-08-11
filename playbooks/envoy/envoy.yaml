@@ -1,0 +1,22 @@
+---
+- name: Download func-e install script
+  ansible.builtin.shell: curl -L https://func-e.io/install.sh | bash -s -- -b /usr/local/bin
+
+- name: Install envoy
+  environment:
+    FUNC_E_HOME: /tmp/func-e
+  ansible.builtin.command: func-e use {{ consul.envoy_version }}
+
+- name: Copy envoy binary to /usr/local/bin
+  ansible.builtin.copy:
+    src: /tmp/func-e/versions/{{ consul.envoy_version }}/bin/envoy
+    dest: /usr/local/bin
+    remote_src: true
+    owner: root
+    group: root
+    mode: "775"
+
+- name: Copy envoy-sidecar service
+  ansible.builtin.template:
+    src: envoy-sidecar@.service.j2
+    dest: "{{ systemd_dir }}/envoy-sidecar@.service"

@@ -1,0 +1,130 @@
+---
+- hosts: all
+  become: true
+  tags:
+    - inventory
+  tasks:
+    - name: Check inventory_hostnames
+      debug:
+        var: inventory_hostname
+
+    - name: Get list of servers
+      run_once: true
+      delegate_to: localhost
+      debug:
+        msg: "{{ (['server-'] | product(groups.consul | map('split', '.') | map('first') | list) | map('join') | list) | join(',') }}"
+    
+    - name: Get cpu threads
+      debug:
+        msg: "{{ ansible_processor_vcpus // 2 }}"
+
+    - debug:
+        msg: "{{ servers | product([port]) | map('join') | join(',') }}"
+      vars:
+        port: ":{{ cockroach.ports.listen }}"
+        servers: "{{ groups.cockroach | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address']) }}"
+
+- hosts: consul
+  become: true
+  tags:
+    - remote
+  tasks:
+    - name: Get private ip addr
+      debug:
+        msg: "{{ ansible_eth1.ipv4.address }}"
+
+    - name: Get node_name from hostname
+      debug:
+        msg: "{{ inventory_hostname.split('.')[0] }}"
+
+    - name: Get all private ip addresses
+      debug:
+        msg: "{{ hostvars.values() | list | map(attribute='ansible_eth1.ipv4.address') | difference([ansible_eth1.ipv4.address]) | to_json }}"
+
+    - name: Get server private ip addresses
+      debug:
+        msg: "{{ groups.consul_servers | difference([inventory_hostname]) | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address']) | to_json }}"
+
+    - name: Stop consul services
+      ansible.builtin.service:
+        name: consul
+        state: stopped
+
+    - name: Delete consul config directory
+      ansible.builtin.file:
+        path: "{{ consul.config_dir }}"
+        state: absent
+
+    - name: Fetch Vault Secrets
+      ansible.builtin.command: |
+        vlt secrets get \
+          -o {{ hcp_vault_secrets_org_id }} \
+          -p {{ hcpvs.project_id }} \
+          -a service-cluster \
+          -plaintext consul_bootstrap_token
+      environment:
+        HCP_CLIENT_ID: "{{ hcp_vault_secrets_client_id }}"
+        HCP_CLIENT_SECRET: "{{ hcp_vault_secrets_key }}"
+      register: secrets_out
+    - debug:
+        var: secrets_out
+
+    - name: Get bootstrap_token from HCPVS # HCP Vault Secrets
+      run_once: true
+      delegate_to: "{{ groups.main[0] }}"
+      ansible.builtin.command: |
+        vlt secrets get \
+          -o {{ hcp_vault_secrets_org_id }} \
+          -p {{ hcpvs.project_id }} \
+          -a service-cluster \
+          -plaintext consul_bootstrap_token
+      environment:
+        HCP_CLIENT_ID: "{{ hcp_vault_secrets_client_id }}"
+        HCP_CLIENT_SECRET: "{{ hcp_vault_secrets_key }}"
+      register: bootstrap_token_out
+
+    - set_fact:
+        bootstrap_token: "{{ bootstrap_token_out.stdout }}"
+
+    - debug:
+        var: bootstrap_token
+
+    - name: Check Token exists
+      run_once: true
+      delegate_to: "{{ groups.main[0] }}"
+      environment:
+        CONSUL_HTTP_ADDR: "{{ ansible_eth1.ipv4.address }}:{{ consul.ports.http }}"
+        CONSUL_HTTP_TOKEN: "{{ bootstrap_token }}"
+      block:
+        - name: List tokens
+          command: consul acl token list --format json
+          register: token_list_out
+
+        - set_fact:
+            found_tokens_count: "{{ token_list_out.stdout | from_json | json_query(query) | length }}"
+          vars:
+            query: "[?Policies[0].Name=='quatsch']"
+
+        - debug:
+            var: found_tokens_count
+
+    - name: Get private network interface
+      debug:
+        msg: "{{ ansible_eth1.device }}"
+
+- hosts: all
+  gather_facts: false
+  tags:
+    - all
+  tasks:
+    - name: Prepare job file
+      delegate_to: localhost
+      run_once: true
+      ansible.builtin.copy:
+        src: debian.nomad
+        dest: /tmp/debian.nomad
+
+    - name: Deploy debug debian
+      delegate_to: localhost
+      run_once: true
+      ansible.builtin.command: nomad job run /tmp/debian.nomad

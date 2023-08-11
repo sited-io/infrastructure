@@ -1,0 +1,15 @@
+---
+- hosts: consul
+  become: true
+  serial: 1
+  tasks:
+    - name: Restart consul service
+      ansible.builtin.service:
+        name: consul
+        state: restarted
+        enabled: true
+        daemon_reload: true
+
+    - name: Wait
+      ansible.builtin.pause:
+        seconds: 2

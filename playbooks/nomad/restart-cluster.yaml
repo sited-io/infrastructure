@@ -1,0 +1,15 @@
+---
+- hosts: nomad
+  become: true
+  serial: 1
+  tasks:
+    - name: Restart nomad service
+      ansible.builtin.service:
+        name: nomad
+        state: restarted
+        enabled: true
+        daemon_reload: true
+
+    - name: Wait
+      ansible.builtin.pause:
+        seconds: 2

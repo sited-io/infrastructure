@@ -1,0 +1,121 @@
+job "zitadel-setup" {
+  datacenters = ["{{ data_center }}"]
+  type = "batch"
+
+  group "zitadel-setup" {
+    network {
+      mode = "bridge"
+    }
+
+    service {
+      name = "zitadel-setup"
+      
+      connect {
+        sidecar_service {
+          proxy {
+            upstreams {
+              destination_name = "cockroach-sql"
+              local_bind_port = {{ cockroach.ports.sql }}
+            }
+          }
+        }
+      }
+    }
+
+    task "zitadel-setup" {
+      driver = "docker"
+
+      vault {
+        policies = ["zitadel"]
+      }
+
+      template {
+        destination = "${NOMAD_SECRETS_DIR}/.env"
+        env = true
+        change_mode = "restart"
+        left_delimiter = "[["
+        right_delimiter = "]]"
+        data = <<EOF
+ZITADEL_MASTERKEY=[[ with secret "kv/zitadel/master_key" ]][[ .Data.key ]][[ end ]]
+EOF
+      }
+
+      template {
+        destination = "${NOMAD_SECRETS_DIR}/steps.yaml"
+        left_delimiter = "[["
+        right_delimiter = "]]"
+        data = <<EOF
+FirstInstance:
+  Org:
+    Name: '{{ domain }}'
+    Human:
+      Username: '[[ with secret "kv/zitadel/users/admin" ]][[ .Data.username ]][[ end ]]'
+      Password: '[[ with secret "kv/zitadel/users/admin" ]][[ .Data.password ]][[ end ]]'
+      Email:
+        Address: '[[ with secret "kv/zitadel/users/admin" ]][[ .Data.username ]][[ end ]]'
+        Verified: true
+  SMTPConfiguration:
+    SMTP:
+      Host: '{{ zitadel.smtp.host }}'
+      User: '[[ with secret "kv/zitadel/smtp" ]][[ .Data.username ]][[ end ]]'
+      Password: '[[ with secret "kv/zitadel/smtp" ]][[ .Data.password ]][[ end ]]'
+    From: '{{ zitadel.smtp.from }}'
+    FromName: '{{ zitadel.smtp.from }}'
+EOF
+      }
+
+      template {
+        destination = "${NOMAD_SECRETS_DIR}/config.yaml"
+        left_delimiter = "[["
+        right_delimiter = "]]"
+        change_mode = "noop"
+        data = <<EOF
+Log:
+  Level: 'debug'
+
+ExternalSecure: true
+ExternalDomain: {{ zitadel.domain }}
+ExternalPort: 443
+
+DefaultInstance:
+  SMTPConfiguration:
+    SMTP:
+      Host: '{{ zitadel.smtp.host }}'
+      User: '[[ with secret "kv/zitadel/smtp" ]][[ .Data.username ]][[ end ]]'
+      Password: '[[ with secret "kv/zitadel/smtp" ]][[ .Data.password ]][[ end ]]'
+    From: '{{ zitadel.smtp.from }}'
+    FromName: '{{ zitadel.smtp.from }}'
+
+Database:
+  cockroach:
+    Host: [[ env "NOMAD_UPSTREAM_IP_cockroach-sql" ]]
+    Port: [[ env "NOMAD_UPSTREAM_PORT_cockroach-sql" ]]
+    Database: zitadel
+    MaxOpenConns: 20
+    MaxConnLifetime: 30m
+    MaxConnIdleTime: 30m
+    Admin:
+      Username: zitadel_admin
+      Password: "[[ with secret "database/static-creds/zitadel_admin" ]][[ .Data.password ]][[ end ]]"
+    User:
+      Username: zitadel_user
+      Password: "[[ with secret "database/static-creds/zitadel_user" ]][[ .Data.password ]][[ end ]]"
+EOF
+      }
+
+      config {
+        image = "ghcr.io/zitadel/zitadel:latest"
+
+        command = "setup"
+
+        args = [
+          "--masterkeyFromEnv",
+          "--steps",
+          "${NOMAD_SECRETS_DIR}/steps.yaml",
+          "--config",
+          "${NOMAD_SECRETS_DIR}/config.yaml",
+        ]
+      }
+    }
+  }
+}

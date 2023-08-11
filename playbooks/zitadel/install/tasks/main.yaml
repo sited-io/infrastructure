@@ -1,0 +1,55 @@
+---
+- name: Ensure working directory
+  ansible.builtin.file:
+    path: /tmp/zitade/install
+    state: directory
+
+- name: Copy zitade vault role to working directory
+  ansible.builtin.copy:
+    src: zitadel.policy.hcl
+    dest: /tmp/zitade/install/zitadel.policy.hcl
+
+- name: Ensure zitadel policy on vault
+  ansible.builtin.command: |
+    vault policy write zitadel \
+      /tmp/zitade/install/zitadel.policy.hcl
+
+- name: Prepare init job file
+  ansible.builtin.template:
+    src: zitadel.init.nomad.j2
+    dest: /tmp/zitade/install/zitadel.init.nomad
+
+- name: Deploy init job
+  ansible.builtin.command: \
+    nomad job run /tmp/zitade/install/zitadel.init.nomad
+
+- name: Wait for init job finished
+  ansible.builtin.shell: \
+    nomad job status -short zitadel-init | grep Status | awk '{print $3}'
+  register: init_job_status_out
+  until: init_job_status_out.stdout == 'dead'
+  delay: 10
+  retries: 10
+
+- name: Prepare setup job file
+  ansible.builtin.template:
+    src: zitadel.setup.nomad.j2
+    dest: /tmp/zitade/install/zitadel.setup.nomad
+
+- name: Deploy setup job
+  command: nomad job run /tmp/zitade/install/zitadel.setup.nomad
+
+- name: Wait for setup job finished
+  ansible.builtin.shell: nomad job status -short zitadel-setup | grep Status | awk '{print $3}'
+  register: setup_job_status_out
+  until: setup_job_status_out.stdout == 'dead'
+  delay: 10
+  retries: 10
+
+- name: Prepare start job file
+  ansible.builtin.template:
+    src: zitadel.nomad.j2
+    dest: /tmp/zitade/install/zitadel.nomad
+
+- name: Deploy start job
+  command: nomad job run /tmp/zitade/install/zitadel.nomad

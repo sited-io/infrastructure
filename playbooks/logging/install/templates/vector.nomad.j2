@@ -1,0 +1,97 @@
+# C/O: https://atodorov.me/2021/07/09/logging-on-nomad-and-log-aggregation-with-loki
+job "vector" {
+  datacenters = ["{{ data_center }}"]
+  type = "system"
+
+  update {
+    min_healthy_time = "10s"
+    healthy_deadline = "5m"
+    progress_deadline = "10m"
+    auto_revert = true
+  }
+
+  group "vector" {
+    count = 1
+    restart {
+      attempts = 3
+      interval = "10m"
+      delay = "30s"
+      mode = "fail"
+    }
+
+    network {
+      mode = "bridge"
+    }
+
+    service {
+      connect {
+        sidecar_service {}
+      }
+    }
+
+    volume "docker-sock" {
+      type = "host"
+      source = "docker-sock-ro"
+      read_only = true
+    }
+
+    ephemeral_disk {
+      size    = 500
+      sticky  = true
+    }
+
+    task "vector" {
+      driver = "docker"
+      config {
+        image = "timberio/vector:latest-alpine"
+        ports = ["api"]
+      }
+
+      volume_mount {
+        volume = "docker-sock"
+        destination = "/var/run/docker.sock"
+        read_only = true
+      }
+
+      env {
+        VECTOR_CONFIG = "${NOMAD_TASK_DIR}/vector.toml"
+        VECTOR_REQUIRE_HEALTHY = "true"
+      }
+
+      resources {
+        cpu    = 500
+        memory = 256
+      }
+
+      template {
+        destination = "${NOMAD_TASK_DIR}/vector.toml"
+        change_mode   = "signal"
+        change_signal = "SIGHUP"
+        left_delimiter = "[["
+        right_delimiter = "]]"
+        data=<<EOH
+data_dir = "alloc/data/vector/"
+[api]
+  enabled = false
+[sources.logs]
+  type = "docker_logs"
+[sinks.loki]
+  type = "loki"
+  inputs = ["logs"]
+  endpoint = "https://646700:{{ log_shipper_api_key }}@{{ graphana_log_url }}"
+  encoding.codec = "json"
+  compression = "snappy"
+  healthcheck.enabled = true
+  remove_label_fields = true
+[sinks.loki.labels]
+  job = "{{ '{{' }} label.\"com.hashicorp.nomad.job_name\" {{ '}}' }}"
+  task = "{{ '{{' }} label.\"com.hashicorp.nomad.task_name\" {{ '}}' }}"
+  group = "{{ '{{' }} label.\"com.hashicorp.nomad.task_group_name\" {{ '}}' }}"
+  node = "{{ '{{' }} label.\"com.hashicorp.nomad.node_name\" {{ '}}' }}"
+        EOH
+      }
+
+      kill_timeout = "30s"
+    }
+  }
+}

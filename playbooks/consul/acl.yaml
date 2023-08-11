@@ -1,0 +1,7 @@
+---
+- hosts: consul
+  become: true
+  handlers:
+    - import_tasks: ../../handlers/global_handlers.yaml
+  roles:
+    - acl

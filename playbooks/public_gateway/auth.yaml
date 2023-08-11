@@ -1,0 +1,4 @@
+- hosts: public_gateway
+  become: true
+  roles:
+    - auth

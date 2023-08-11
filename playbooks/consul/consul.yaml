@@ -1,0 +1,30 @@
+---
+- name: Install Consul software
+  import_playbook: install.yaml
+  tags:
+    - install
+
+- name: Configure Consul agents
+  import_playbook: configure.yaml
+  tags:
+    - configure
+
+- name: Configure ACL
+  import_playbook: acl.yaml
+  tags:
+    - acl
+
+- name: Configure gossip encryption
+  import_playbook: gossip.yaml
+  tags:
+    - gossip
+
+- name: Configure tls
+  import_playbook: tls.yaml
+  tags:
+    - tls
+
+- name: Configure Consul as DNS server
+  import_playbook: dns.yaml
+  tags:
+    - dns

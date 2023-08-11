@@ -1,0 +1,12 @@
+---
+- import_playbook: install.yaml
+  tags:
+    - install
+
+- import_playbook: projects.yaml
+  tags:
+    - projects
+
+- import_playbook: branding.yaml
+  tags:
+    - branding

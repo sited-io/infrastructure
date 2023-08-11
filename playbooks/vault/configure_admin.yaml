@@ -1,0 +1,4 @@
+---
+- hosts: localhost
+  roles:
+    - configure_admin

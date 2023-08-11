@@ -1,0 +1,106 @@
+---
+- ansible.builtin.import_tasks: ../envoy/envoy.yaml
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/cockroach/consul
+        state: directory
+
+    - name: Copy acl policy to working directory
+      ansible.builtin.copy:
+        src: acl_register_cockroach_policy.hcl
+        dest: /tmp/cockroach/consul/acl_register_cockroach_policy.hcl
+
+    - name: Create register cockroach policy
+      ansible.builtin.command: |
+        consul acl policy create \
+          -name register_cockroach_policy \
+          -rules @/tmp/cockroach/consul/acl_register_cockroach_policy.hcl
+      register: create_policy_out
+      failed_when: create_policy_out.rc != 0 and 'already exists' not in create_policy_out.stderr
+
+    - name: Update register cockroach policy if exists
+      ansible.builtin.command: |
+        consul acl policy update \
+          -name register_cockroach_policy \
+          -rules @/tmp/cockroach/consul/acl_register_cockroach_policy.hcl
+      when: create_policy_out.rc != 0 and 'already exists' in create_policy_out.stderr
+
+    - name: Create vault role for register cockroach policy
+      ansible.builtin.command: |
+        vault write consul/roles/register_cockroach_role \
+          policies=register_cockroach_policy
+
+    - name: Get register cockroach token
+      ansible.builtin.command: |
+        vault read -field=token consul/creds/register_cockroach_role
+      register: token_out
+
+    - name: Get consul connect root ca
+      ansible.builtin.get_url:
+        url: "{{ consul.url }}/v1/connect/ca/roots"
+        dest: /tmp/cockroach/consul/connect-root-ca.json
+
+    - name: Read connect root ca
+      ansible.builtin.slurp:
+        path: /tmp/cockroach/consul/connect-root-ca.json
+      register: connect_ca_out
+    
+- set_fact:
+    connect_root_ca: "{{ connect_ca_out.content | b64decode | from_json | json_query('Roots[0].RootCert') }}"
+    consul_token: "{{ token_out.stdout }}"
+
+- name: Copy connect root ca to consul certs directory
+  ansible.builtin.copy:
+    content: "{{ connect_root_ca }}"
+    dest: "{{ consul.certs_dir }}/connect.root.ca.crt"
+    owner: consul
+    group: consul
+    mode: "444"
+
+- name: Copy cockroach envoy proxy env
+  ansible.builtin.template:
+    src: envoy-sidecar@.env.j2
+    dest: "{{ systemd_dir }}/envoy-sidecar@{{ item.service }}.env"
+    owner: root
+    group: root
+    mode: "440"
+  with_items:
+    - service: cockroach-sql
+      admin_port: 19000
+    - service: cockroach-http
+      admin_port: 19001
+
+- name: Copy cockroach service file
+  ansible.builtin.template:
+    src: cockroach.service.hcl.j2
+    dest: "{{ consul.config_dir }}/cockroach.service.hcl"
+    owner: consul
+    group: consul
+    mode: "664"
+  notify:
+    - envoy-sidecar for cockroach-sql
+    - envoy-sidecar for cockroach-http
+
+- name: Restart Consul
+  throttle: 1
+  ansible.builtin.service:
+    name: consul
+    state: restarted
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Copy api gateway job file to working directory
+      ansible.builtin.template:
+        src: cockroach-api-gateway.nomad.j2
+        dest: /tmp/cockroach/consul/cockroach-api-gateway.nomad
+
+    - name: Ensure api gateway configuration
+      ansible.builtin.command: |
+        nomad job run /tmp/cockroach/consul/cockroach-api-gateway.nomad

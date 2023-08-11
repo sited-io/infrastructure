@@ -1,0 +1,184 @@
+---
+- ansible.builtin.import_tasks: ../ufw/ufw.yaml
+
+- ansible.builtin.import_tasks: ../consul-template/consul-template.yaml
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Gather facts from nomad clients
+      ansible.builtin.setup:
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: "{{ groups.nomad_clients }}"
+
+    - name: Ensure working directory clean
+      ansible.builtin.file:
+        path: /tmp/cockroach/tls
+        state: absent
+
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/cockroach/tls/certs
+        state: directory
+
+    - name: Get Cockroach binary
+      unarchive:
+        src: "{{ cockroach.binary_url }}"
+        dest: "/tmp/cockroach/tls"
+        remote_src: true
+
+    - name: Find Cockroach binary
+      ansible.builtin.find:
+        paths: "/tmp/cockroach/tls"
+        patterns: "cockroach"
+        recurse: true
+      register: find_bin_out
+
+    - name: Copy Cockroach executable to working directory
+      ansible.builtin.copy:
+        src: "{{ find_bin_out.files[0].path }}"
+        dest: /tmp/cockroach/tls
+        mode: "777"
+
+    - name: Ensure kv secret engine is enabled on vault
+      ansible.builtin.command: |
+        vault secrets enable -path=kv kv
+      register: enable_kv2_out
+      failed_when: enable_kv2_out.rc != 0 and 'path is already in use' not in enable_kv2_out.stderr
+
+    - name: Check if certificate exists
+      ansible.builtin.command: |
+        vault read kv/cockroach/ca/crt
+      register: get_ca_out
+      ignore_errors: true
+
+    - name: Create cockroach CA certificate
+      ansible.builtin.command: |
+        /tmp/cockroach/tls/cockroach cert create-ca \
+          --certs-dir=/tmp/cockroach/tls/certs \
+          --ca-key=/tmp/cockroach/tls/certs/ca.key
+      when: get_ca_out.rc != 0
+
+    - name: Save CA to vault
+      ansible.builtin.command: |
+        vault write kv/cockroach/ca/crt \
+          certificate="{{ lookup('ansible.builtin.file', '/tmp/cockroach/tls/certs/ca.crt') }}"
+      when: get_ca_out.rc != 0
+
+    - name: Save CA key to vault
+      ansible.builtin.command: |
+        vault write kv/cockroach/ca/key \
+          key="{{ lookup('ansible.builtin.file', '/tmp/cockroach/tls/certs/ca.key') }}"
+      when: get_ca_out.rc != 0
+
+    - name: Get CA from vault
+      ansible.builtin.command: |
+        vault read -field=certificate kv/cockroach/ca/crt
+      register: ca_out
+
+    - name: Get CA key from vault
+      ansible.builtin.command: |
+        vault read -field=key kv/cockroach/ca/key
+      register: ca_key_out
+
+    - name: Save CA to working directory
+      ansible.builtin.copy:
+        content: "{{ ca_out.stdout }}"
+        dest: /tmp/cockroach/tls/certs/ca.crt
+
+    - name: Save CA key to working directory
+      ansible.builtin.copy:
+        content: "{{ ca_key_out.stdout }}"
+        dest: /tmp/cockroach/tls/certs/ca.key
+
+    - name: Create node certificates and vault roles
+      ansible.builtin.include_tasks: handle-each-node.yaml
+      with_items: "{{ groups.cockroach }}"
+
+    - name: Check root client certificate exists
+      ansible.builtin.command: |
+        vault read kv/cockroach/clients/root
+      register: root_client_certificate_out
+      ignore_errors: true
+
+    - name: Create root client certificate
+      ansible.builtin.command: |
+        /tmp/cockroach/tls/cockroach cert create-client \
+          --certs-dir=/tmp/cockroach/tls/certs \
+          --ca-key=/tmp/cockroach/tls/certs/ca.key \
+          root
+      when: root_client_certificate_out.rc != 0
+
+    - name: Save root client certificate and key to vault
+      ansible.builtin.command: |
+        vault write kv/cockroach/clients/root \
+          certificate="{{ lookup('ansible.builtin.file', '/tmp/cockroach/tls/certs/client.root.crt') }}" \
+          key="{{ lookup('ansible.builtin.file', '/tmp/cockroach/tls/certs/client.root.key') }}"
+      when: root_client_certificate_out.rc != 0
+
+- set_fact:
+    node_name: "{{ inventory_hostname.split('.')[0] }}"
+
+- name: Get vault token for cluster renewal
+  delegate_to: localhost
+  become: false
+  ansible.builtin.command: |
+    vault token create -field=token \
+      -policy=cockroach-node-{{ node_name }} \
+      -period=48h
+  register: vault_token_out
+
+- set_fact:
+    vault_token: "{{ vault_token_out.stdout }}"
+
+- name: Ensure user cockroach
+  ansible.builtin.user:
+    name: cockroach
+    system: true
+    state: present
+
+- name: Ensure cockroach certs directory
+  ansible.builtin.file:
+    path: "{{ cockroach.certs_dir }}"
+    state: directory
+    owner: cockroach
+    group: cockroach
+    mode: "775"
+
+- name: Copy cluster CA template
+  ansible.builtin.template:
+    src: ca.crt.tpl.j2
+    dest: "{{ consul_template.data_dir }}/ca.crt.tpl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted
+
+- name: Copy node certificate template
+  ansible.builtin.template:
+    src: node.crt.tpl.j2
+    dest: "{{ consul_template.data_dir }}/node.crt.tpl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted
+
+- name: Copy node certificate key template
+  ansible.builtin.template:
+    src: node.key.tpl.j2
+    dest: "{{ consul_template.data_dir }}/node.key.tpl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted
+
+- name: Copy cockroach tls consul-template config file
+  ansible.builtin.template:
+    src: cockroach_cluster_ctmpl.hcl.j2
+    dest: "{{ consul_template.config_dir }}/cockroach_cluster_ctmpl.hcl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted

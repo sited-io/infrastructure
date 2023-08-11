@@ -1,0 +1,7 @@
+---
+- name: envoy-sidecar for cockroach-sql
+  ansible.builtin.service:
+    name: envoy-sidecar@cockroach-sql.service
+    state: restarted
+    enabled: true
+    daemon_reload: true

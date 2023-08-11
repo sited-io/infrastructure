@@ -1,0 +1,101 @@
+---
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure working directory clean
+      ansible.builtin.file:
+        path: /tmp/cockroach/install
+        state: absent
+
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/cockroach/install
+        state: directory
+
+    - name: Get Cockroach binary
+      unarchive:
+        src: "{{ cockroach.binary_url }}"
+        dest: "/tmp/cockroach/install"
+        remote_src: true
+
+    - name: Find Cockroach binary
+      ansible.builtin.find:
+        paths: "/tmp/cockroach/install"
+        patterns: "cockroach"
+        recurse: true
+      register: find_bin_out
+
+    - name: Check that only one file was found
+      ansible.builtin.assert:
+        that: "{{ find_bin_out.matched == 1 }}"
+        fail_msg: "Found multiple files named 'cockroach'"
+
+    - name: Find Cockroach library files
+      ansible.builtin.find:
+        paths: "/tmp/cockroach/install"
+        patterns: "libgeos*.so"
+        recurse: true
+      register: find_libs_out
+
+    - name: Check that only two files where found
+      ansible.builtin.assert:
+        that: "{{ find_libs_out.matched == 2 }}"
+        fail_msg: "Found more than 2 files matching 'libgeos*.so'"
+
+- name: Ensure dependencies
+  ansible.builtin.apt:
+    package: "{{ packages }}"
+    state: latest
+  vars:
+    packages:
+      - rsync
+      - tzdata
+
+- name: Ensure user cockroach
+  ansible.builtin.user:
+    name: cockroach
+    system: true
+    state: present
+
+- name: Ensure cockroach directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: cockroach
+    group: cockroach
+    mode: "775"
+  with_items:
+    - "{{ cockroach.bin_dir }}"
+    - "{{ cockroach.lib_dir }}"
+    - "{{ cockroach.certs_dir }}"
+
+- name: Copy binary
+  ansible.builtin.copy:
+    src: "{{ find_bin_out.files[0].path }}"
+    dest: "{{ cockroach.bin_dir }}/"
+    owner: cockroach
+    group: cockroach
+    mode: "554"
+  notify: Cockroach Restarted
+
+- name: Copy library files
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ cockroach.lib_dir }}/"
+    owner: cockroach
+    group: cockroach
+    mode: "554"
+  with_items:
+    - "{{ find_libs_out.files[0].path }}"
+    - "{{ find_libs_out.files[1].path }}"
+  notify: Cockroach Restarted
+
+- set_fact:
+    join_with: "{{ groups.cockroach | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address']) | join(',') }}"
+
+- name: Copy systemd file
+  ansible.builtin.template:
+    src: cockroach.service.j2
+    dest: "{{ systemd_dir }}/cockroach.service"
+  notify: Cockroach Restarted

@@ -1,0 +1,7 @@
+---
+- hosts: nomad
+  become: true
+  handlers:
+    - import_tasks: ../../handlers/global_handlers.yaml
+  roles:
+    - install

@@ -1,0 +1,60 @@
+---
+- name: Ensure directories exists
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: www-data
+    mode: 0775
+  with_items:
+    - "{{ public_gateway.config_dir }}"
+    - "{{ public_gateway.sites_dir }}"
+
+- name: Ensure build dependencies installed
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+    state: latest
+  vars:
+    packages:
+      - build-essential
+      - gcc
+      - libssl-dev
+      - make
+      - libpcre3-dev
+      - zlib1g-dev
+      - libxml2-dev
+      - libxslt-dev
+      - libgd-dev
+      - libgeoip-dev
+      - libperl-dev
+
+- name: Download and unarchive sources
+  ansible.builtin.unarchive:
+    src: "{{ public_gateway.nginx_package_url }}"
+    dest: /home/admin/
+    owner: admin
+    group: admin
+    remote_src: yes
+
+- name: Configure make
+  ansible.builtin.command: |
+    chdir=/home/admin/{{ nginx_version }}/ \
+    ./configure \
+      --prefix=/var/www/html \
+      --sbin-path=/usr/sbin/nginx \
+      --conf-path={{ public_gateway.config_dir }}/nginx.conf \
+      --http-log-path=/var/log/nginx/access.log \
+      --error-log-path=/var/log/nginx/error.log \
+      --lock-path=/var/lock/nginx.lock \
+      --pid-path=/var/run/nginx.pid \
+      --modules-path={{ public_gateway.config_dir }}/modules \
+      --with-http_ssl_module \
+      --with-http_v2_module \
+      --with-stream \
+      --with-stream_ssl_module
+
+- name: Install nginx
+  community.general.make:
+    chdir: /home/admin/{{ nginx_version }}/
+    target: install
+    jobs: 4

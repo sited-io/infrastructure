@@ -1,0 +1,67 @@
+---
+- name: Get cloudflare_origin_cert_key from HCPVS # HCP Vault Secrets
+  run_once: true
+  delegate_to: localhost
+  become: false
+  ansible.builtin.command: |
+    vlt secrets get \
+      -p {{ hcpvs.project_id }} \
+      -a service-cluster \
+      -plaintext cloudflare_origin_ssl_certificate_key
+  register: cloudflare_origin_cert_key_out
+
+- name: Configure nginx
+  when: inventory_hostname in groups.public_gateway
+  block:
+    - name: Copy nginx config
+      ansible.builtin.template:
+        src: nginx.conf.j2
+        dest: "{{ public_gateway.config_dir }}/nginx.conf"
+        owner: root
+        group: www-data
+        mode: "640"
+
+    - name: Copy service file
+      ansible.builtin.copy:
+        src: nginx.service
+        dest: "{{ systemd_dir }}/nginx.service"
+        owner: root
+        group: root
+        mode: "660"
+      notify: nginx Restarted
+
+    - name: Copy Cloudflare origin ca
+      ansible.builtin.copy:
+        src: peoplesmarkets.com.pem
+        dest: "{{ public_gateway.config_dir }}/origin.pem"
+        owner: root
+        group: www-data
+        mode: "640"
+      notify: nginx Restarted
+
+    - name: Copy Cloudflare origin ca key
+      ansible.builtin.copy:
+        dest: "{{ public_gateway.config_dir }}/origin.key"
+        content: "{{ cloudflare_origin_cert_key_out.stdout.replace('\\n', '\n') }}"
+        owner: root
+        group: www-data
+        mode: "440"
+      notify: nginx Restarted
+
+    - name: Copy health endpoint config
+      ansible.builtin.template:
+        src: health.conf.j2
+        dest: "{{ public_gateway.sites_dir }}/health.conf"
+        owner: root
+        group: www-data
+        mode: "640"
+      notify: nginx Restarted
+
+    - name: Copy tools config
+      ansible.builtin.template:
+        src: tools.conf.j2
+        dest: "{{ public_gateway.sites_dir }}/tools.conf"
+        owner: root
+        group: www-data
+        mode: "640"
+      notify: nginx Restarted

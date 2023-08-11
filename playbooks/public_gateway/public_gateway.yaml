@@ -1,0 +1,16 @@
+---
+- import_playbook: prepare.yaml
+  tags:
+    - prepare
+
+- import_playbook: install.yaml
+  tags:
+    - install
+
+- import_playbook: configure.yaml
+  tags:
+    - configure
+
+- import_playbook: auth.yaml
+  tags:
+    - auth

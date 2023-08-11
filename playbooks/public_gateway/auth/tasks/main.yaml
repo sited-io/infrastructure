@@ -1,0 +1,20 @@
+---
+- ansible.builtin.import_tasks: ../consul-template/consul-template.yaml
+
+- name: Copy auth proxy nginx config template
+  ansible.builtin.template:
+    src: auth.conf.tpl.j2
+    dest: "{{ consul_template.data_dir }}/auth.conf.tpl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted
+
+- name: Copy auth proxy consul-template config
+  ansible.builtin.template:
+    src: auth_conf_ctmpl.hcl.j2
+    dest: "{{ consul_template.config_dir }}/auth_conf_ctmpl.hcl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted

@@ -1,0 +1,53 @@
+---
+- set_fact:
+    node_name: "{{ item.split('.')[0] }}"
+    lb_ips: "{{ groups.nomad_clients | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address']) | list }}"
+
+- name: Check certificate exists on vault
+  ansible.builtin.command: |
+    vault read kv/cockroach/nodes/{{ node_name }}
+  register: certificate_exists_out
+  ignore_errors: true
+
+- when: certificate_exists_out.rc != 0
+  block:
+    - name: Create node certificate
+      ansible.builtin.command: |
+        /tmp/cockroach/tls/cockroach cert create-node \
+          --certs-dir=/tmp/cockroach/tls/certs \
+          --ca-key=/tmp/cockroach/tls/certs/ca.key \
+          {{ hostvars[item].ansible_eth1.ipv4.address }} \
+          cockroach-sql-gateway.service.dc1.consul \
+          {% for ip in lb_ips %} {{ ip }} {% endfor %} \
+          localhost \
+          127.0.0.1
+
+    - set_fact:
+        certificate: "{{ lookup('ansible.builtin.file', '/tmp/cockroach/tls/certs/node.crt') }}"
+        key: "{{ lookup('ansible.builtin.file', '/tmp/cockroach/tls/certs/node.key') }}"
+
+    - name: Save node certificate and key to vault
+      ansible.builtin.command: |
+        vault write kv/cockroach/nodes/{{ node_name }} \
+          certificate="{{ certificate }}" \
+          key="{{ key }}"
+
+    - name: Ensure certificate removed
+      ansible.builtin.file:
+        path: /tmp/cockroach/tls/certs/node.crt
+        state: absent
+
+    - name: Ensure certificate key removed
+      ansible.builtin.file:
+        path: /tmp/cockroach/tls/certs/node.key
+        state: absent
+
+    - name: Copy node specific policy to working directory
+      ansible.builtin.template:
+        src: cockroach-node.policy.hcl.j2
+        dest: /tmp/cockroach/tls/cockroach-node-{{ node_name }}.policy.hcl
+
+    - name: Ensure policy on vault
+      ansible.builtin.command: |
+        vault policy write cockroach-node-{{ node_name }} \
+          /tmp/cockroach/tls/cockroach-node-{{ node_name }}.policy.hcl

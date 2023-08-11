@@ -1,0 +1,13 @@
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+
+  server_name health-{{ domain }};
+
+  ssl_certificate {{ public_gateway.config_dir }}/origin.pem;
+  ssl_certificate_key {{ public_gateway.config_dir }}/origin.key;
+
+  location /health {
+    return 200 'Ok';
+  }
+}

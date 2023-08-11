@@ -1,0 +1,20 @@
+---
+- import_playbook: tls.yaml
+  tags:
+    - tls
+
+- import_playbook: install.yaml
+  tags:
+    - install
+
+- import_playbook: init.yaml
+  tags:
+    - init
+
+- import_playbook: consul.yaml
+  tags:
+    - consul
+
+- import_playbook: credentials.yaml
+  tags:
+    - credentials

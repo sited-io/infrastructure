@@ -1,0 +1,56 @@
+---
+- name: Vault Restarted
+  throttle: 1
+  ansible.builtin.service:
+    name: vault
+    state: restarted
+
+- name: Consul Restarted
+  throttle: 2
+  ansible.builtin.service:
+    name: consul
+    state: restarted
+
+- name: Consul Reloaded
+  throttle: 1
+  ansible.builtin.service:
+    name: consul
+    state: reloaded
+
+- name: consul-template Restarted
+  throttle: 1
+  ansible.builtin.service:
+    name: consul-template
+    state: restarted
+
+- name: nginx Restarted
+  throttle: 1
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+    daemon_reload: true
+    enabled: true
+
+- name: Nomad Reloaded
+  throttle: 1
+  ansible.builtin.service:
+    name: nomad
+    state: reloaded
+
+- name: Nomad Restarted
+  throttle: 1
+  ansible.builtin.service:
+    name: nomad
+    state: restarted
+    enabled: true
+
+- name: Docker Restarted
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+    enabled: true
+
+- name: Systemd Resolved Restarted
+  ansible.builtin.service:
+    name: systemd-resolved
+    state: restarted

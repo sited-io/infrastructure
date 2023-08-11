@@ -1,0 +1,14 @@
+---
+all:
+  vars:
+    public_gateway:
+      config_dir: /etc/nginx
+      sites_dir: /etc/nginx/conf.d
+      nginx_package_url: https://nginx.org/download/{{ nginx_version }}.tar.gz
+
+  children:
+    public_gateway:
+      hosts:
+        euliania-dev.peoplesmarkets.com:
+        eudea-dev.peoplesmarkets.com:
+        eurelia-dev.peoplesmarkets.com:

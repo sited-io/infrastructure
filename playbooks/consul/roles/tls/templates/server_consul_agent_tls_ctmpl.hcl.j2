@@ -1,0 +1,59 @@
+vault {
+  address      = "{{ vault.url }}"
+  unwrap_token = false
+  renew_token  = true
+
+  token        = "{{ vault_token }}"
+
+  ssl {
+    enabled = true
+    verify  = true
+  }
+}
+
+template {
+  source          = "{{ consul_template.data_dir }}/ca.crt.tpl"
+  destination     = "{{ consul.certs_dir }}/consul-agent-ca.pem"
+  left_delimiter  = "[["
+  right_delimiter = "]]"
+
+  user            = "consul"
+  group           = "consul"
+  perms           = 0440
+
+  exec {
+    command = ["systemctl", "reload", "consul"]
+  }
+}
+
+template {
+  source          = "{{ consul_template.data_dir }}/server.crt.tpl"
+  destination     = "{{ consul.certs_dir }}/{{ data_center }}-server-{{ consul.domain }}.pem"
+  left_delimiter  = "[["
+  right_delimiter = "]]"
+
+  user            = "consul"
+  group           = "consul"
+  perms           = 0440
+
+  exec {
+    command = ["systemctl", "reload", "consul"]
+  }
+}
+
+template {
+  source          = "{{ consul_template.data_dir }}/server.key.tpl"
+  destination     = "{{ consul.certs_dir }}/{{ data_center }}-server-{{ consul.domain }}-key.pem"
+  left_delimiter  = "[["
+  right_delimiter = "]]"
+
+  user            = "consul"
+  group           = "consul"
+  perms           = 0440
+
+  exec {
+    command = ["systemctl", "reload", "consul"]
+  }
+}
+
+

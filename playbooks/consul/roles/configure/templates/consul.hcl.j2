@@ -1,0 +1,39 @@
+# Data Persistence
+data_dir    = "{{ consul.data_dir }}"
+datacenter  = "{{ data_center }}"
+client_addr = "127.0.0.1 {{ ansible_eth1.ipv4.address }}"
+bind_addr   = "{{ ansible_eth1.ipv4.address }}"
+
+retry_join = {{ groups.consul_servers | difference([inventory_hostname]) | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address']) | to_json }}
+
+# Logging
+log_level = "INFO"
+
+# Enable service mesh
+connect {
+  enabled = true
+}
+
+ports {
+  // dns = 8600 # default
+  // http = 8500 # default
+  https    = {{ consul.ports.https }}
+  grpc     = {{ consul.ports.grpc }}
+  grpc_tls = {{ consul.ports.grpc_tls }}
+  // serf_lan = 8301 # default
+  // serf_wan = 8302 # default
+  // server = 8300 # default
+  // sidecar_min_port = 21000 # default
+  // sidecar_max_port = 21255 # default
+  // expose_min_port = 21500 # default
+  // expose_max_port = 21755 # default
+}
+
+# DNS recursors
+recursors = ["{{ consul.dns_recursor }}"]
+
+# Disable script checks
+enable_script_checks = false
+
+# Enable local script checks
+enable_local_script_checks = true
