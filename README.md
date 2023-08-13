@@ -1,47 +1,117 @@
 # peoplesmarkets.com - Infrastructure
 
-## Dev
+## Service Cluster
 
-### Service Cluster
+### 1: Host
 
-#### 1: Host
-
+```sh
+# dev
 ansible-playbook -i inventories/dev/ playbooks/host/host.yaml
+```
 
-#### 2: Public Gateway (proxy)
+```sh
+# prod
+ansible-playbook -i inventories/prod/ playbooks/host/host.yaml
+```
 
+### 2: Public Gateway (proxy)
+
+```sh
+# dev
 ansible-playbook -i inventories/dev/ playbooks/public_gateway/public_gateway.yaml
+```
 
-#### 3: Vault
+```sh
+# prod
+ansible-playbook -i inventories/prod/ playbooks/public_gateway/public_gateway.yaml
+```
 
+### 3: Vault
+
+```sh
+# dev
 ansible-playbook -i inventories/dev/ playbooks/vault/vault.yaml
+ansible-playbook -i inventories/dev/ playbooks/public_gateway/public_gateway.yaml --tags configure
+```
 
-##### 3.1: Configure admin locally
+```sh
+# prod
+ansible-playbook -i inventories/prod/ playbooks/vault/vault.yaml
+ansible-playbook -i inventories/prod/ playbooks/public_gateway/public_gateway.yaml --tags configure
+```
 
-ansible-playbook -i inventories/dev/ playbooks/vault/configure_admin.yaml
+### 4: Consul
 
-#### 4: Consul
-
+```sh
+# dev
 ansible-playbook -i inventories/dev/ playbooks/consul/consul.yaml
+ansible-playbook -i inventories/dev/ playbooks/public_gateway/public_gateway.yaml --tags configure
+```
 
-#### 5: Nomad
+```sh
+# prod
+ansible-playbook -i inventories/prod/ playbooks/consul/consul.yaml
+ansible-playbook -i inventories/prod/ playbooks/public_gateway/public_gateway.yaml --tags configure
+```
 
+### 5: Nomad
+
+```sh
+# dev
 ansible-playbook -i inventories/dev/ playbooks/nomad/nomad.yaml
+ansible-playbook -i inventories/dev/ playbooks/public_gateway/public_gateway.yaml --tags configure
+```
 
-### Monitoring
+```sh
+# prod
+ansible-playbook -i inventories/prod/ playbooks/nomad/nomad.yaml
+ansible-playbook -i inventories/prod/ playbooks/public_gateway/public_gateway.yaml --tags configure
+```
 
-#### 1: Allocation logs
+## Monitoring
 
+### 1: Allocation logs
+
+```sh
+# dev
 ansible-playbook -i inventories/dev/ playbooks/logging/logging.yaml
+```
 
-### Databases
+```sh
+# prod
+ansible-playbook -i inventories/prod/ playbooks/logging/logging.yaml
+```
 
-#### 1: Cockroach
+## Databases
 
+### 1: Cockroach
+
+```sh
+# dev
 ansible-playbook -i inventories/dev/ playbooks/cockroach/cockroach.yaml
+ansible-playbook -i inventories/dev/ playbooks/public_gateway/public_gateway.yaml --tags configure
+```
 
-### Auth
+```sh
+# prod
+ansible-playbook -i inventories/prod/ playbooks/cockroach/cockroach.yaml
+ansible-playbook -i inventories/prod/ playbooks/public_gateway/public_gateway.yaml --tags configure
+```
 
-#### 1: Zitadel
+## Auth
 
+### 1: Zitadel
+
+```sh
+# dev
+ansible-playbook -i inventories/dev/ playbooks/zitadel/install.yaml
+ansible-playbook -i inventories/dev/ playbooks/public_gateway/auth.yaml
 ansible-playbook -i inventories/dev/ playbooks/zitadel/zitadel.yaml
+```
+
+```sh
+# prod
+ansible-playbook -i inventories/prod/ playbooks/zitadel/install.yaml
+ansible-playbook -i inventories/prod/ playbooks/public_gateway/auth.yaml
+ansible-playbook -i inventories/prod/ playbooks/zitadel/zitadel.yaml
+```

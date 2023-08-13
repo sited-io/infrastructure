@@ -1,8 +1,4 @@
 ---
-- import_playbook: install.yaml
-  tags:
-    - install
-
 - import_playbook: projects.yaml
   tags:
     - projects

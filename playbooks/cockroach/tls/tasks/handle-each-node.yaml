@@ -1,5 +1,5 @@
 ---
-- set_fact:
+- ansible.builtin.set_fact:
     node_name: "{{ item.split('.')[0] }}"
     lb_ips: "{{ groups.nomad_clients | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address']) | list }}"
 
@@ -22,7 +22,7 @@
           localhost \
           127.0.0.1
 
-    - set_fact:
+    - ansible.builtin.set_fact:
         certificate: "{{ lookup('ansible.builtin.file', '/tmp/cockroach/tls/certs/node.crt') }}"
         key: "{{ lookup('ansible.builtin.file', '/tmp/cockroach/tls/certs/node.key') }}"
 

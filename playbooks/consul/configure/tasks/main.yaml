@@ -19,7 +19,7 @@
   ansible.builtin.command: consul keygen
   register: gossip_encryption_key_out
 
-- set_fact:
+- ansible.builtin.set_fact:
     gossip_encryption_key: "{{ gossip_encryption_key_out.stdout }}"
 
 - name: Copy common config file

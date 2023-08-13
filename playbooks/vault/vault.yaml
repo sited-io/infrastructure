@@ -10,3 +10,7 @@
 - import_playbook: configure.yaml
   tags:
     - configure
+
+- import_playbook: configure_admin.yaml
+  tags:
+    - configure_admin

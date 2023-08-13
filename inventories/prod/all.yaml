@@ -1,20 +1,19 @@
 ---
 all:
   vars:
-    # util
     hex_chars: 0123456789ABCDEF
-    # util
 
-    domain: dev.peoplesmarkets.com
+    current_environment: prod
+    domain: peoplesmarkets.com
     data_center: dc1
     graphana_log_url: logs-prod-008.grafana.net
-    private_network_range: 10.0.0.0/22
+    private_network_range: "10.0.4.0/22"
 
     systemd_dir: /etc/systemd/system
     systemd_resolved_config_dir: /etc/systemd/resolved.conf.d
 
     hcpvs:
-      project_id: 8df8469b-599b-466a-adf4-3eebd64553fd
+      project_id: 265f4eb5-17b9-4c92-8eb9-b2959fcf69c7
 
     nginx_version: nginx-1.25.1
 
@@ -27,22 +26,18 @@ all:
       config_dir: /etc/envconsul
 
     main_website:
-      dev_mode: true
+      dev_mode: false
       redirect_uris:
-        - https://dev.peoplesmarkets.com/sign-in/callback
-        - http://localhost:8000/sign-in/callback
+        - https://peoplesmarkets.com/sign-in/callback
       post_logout_redirect_uris:
-        - https://dev.peoplesmarkets.com
-        - http://localhost:8000
+        - https://peoplesmarkets.com
 
     community_website:
       dev_mode: true
       redirect_uris:
-        - https://community-dev.peoplesmarkets.com/sign-in/callback
-        - http://localhost:8000/sign-in/callback
+        - https://community.peoplesmarkets.com/sign-in/callback
       post_logout_redirect_uris:
-        - https://community-dev.peoplesmarkets.com
-        - http://localhost:8000
+        - https://community.peoplesmarkets.com
 
     branding:
       colors:
@@ -54,3 +49,14 @@ all:
         warnDark: "#ff3b5b"
         backgroundDark: "#1e1e1e"
         fontDark: "#e8eaed"
+
+  hosts:
+    eudea.peoplesmarkets.com:
+    euliania.peoplesmarkets.com:
+    eurelia.peoplesmarkets.com:
+    euria.peoplesmarkets.com:
+    eudokia.peoplesmarkets.com:
+    eudel.peoplesmarkets.com:
+    euri.peoplesmarkets.com:
+    eugene.peoplesmarkets.com:
+    euclid.peoplesmarkets.com:

@@ -39,7 +39,7 @@
       register: ssl_certificate_out
       failed_when: ssl_certificate_out.rc != 0 and 'secret not found' not in ssl_certificate_out.stdout
 
-    - set_fact:
+    - ansible.builtin.set_fact:
         ssl_ca_certificate_key: "{{ ssl_ca_certificate_key_out.stdout if ssl_ca_certificate_key_out.rc == 0 else '' }}"
         ssl_ca_certificate: "{{ ssl_ca_certificate_out.stdout if ssl_ca_certificate_out.rc == 0 else '' }}"
         ssl_certificate_key: "{{ ssl_certificate_key_out.stdout if ssl_certificate_key_out.rc == 0 else '' }}"
@@ -52,126 +52,126 @@
   block:
     - name: Ensure working directory
       ansible.builtin.file:
-        path: "/tmp/certs"
+        path: "/tmp/vault/certs"
         state: directory
 
-    - name: Generate CA certificate and key if not exists
-      ansible.builtin.command: |
-        openssl req \
-          -x509 \
-          -newkey rsa:4096 \
-          -keyout /tmp/certs/ca.key \
-          -out /tmp/certs/ca.crt \
-          -sha256 \
-          -days 3650 \
-          -nodes \
-          -subj "/C=DE/ST=Bavaria/L=Munich/O=peoplesmarkets.com/CN=peoplesmarkets.com"
-
-    - name: Generate key for vault certificate if not exists
+    - name: Generate CA certificate key
       ansible.builtin.command: |
         openssl ecparam \
           -name prime256v1 \
           -genkey \
           -noout \
-          -out /tmp/certs/vault.key
+          -out /tmp/vault/certs/ca.key
+
+    - name: Generate CA certificate
+      ansible.builtin.command: |
+        openssl req \
+          -x509 \
+          -new \
+          -key /tmp/vault/certs/ca.key \
+          -out /tmp/vault/certs/ca.crt \
+          -sha256 \
+          -days 3650 \
+          -nodes \
+          -subj "/CN=Vault"
+
+    - name: Generate key for vault certificate
+      ansible.builtin.command: |
+        openssl ecparam \
+          -name prime256v1 \
+          -genkey \
+          -noout \
+          -out /tmp/vault/certs/client.key
 
     - name: Generate vault certificate request
       ansible.builtin.command: |
         openssl req \
           -new \
-          -key /tmp/certs/vault.key \
-          -out /tmp/certs/vault.csr \
-          -subj "/C=DE/ST=Bavaria/L=Munich/O=peoplesmarkets.com/CN=Vault"
+          -key /tmp/vault/certs/client.key \
+          -out /tmp/vault/certs/client.csr \
+          -subj "/CN=Vault"
 
     - name: Copy cert configuration to working dir
       ansible.builtin.template:
         src: cert.conf.j2
-        dest: /tmp/certs/cert.conf
+        dest: /tmp/vault/certs/cert.conf
 
     - name: Sign vault certificate
       ansible.builtin.command: |
         openssl x509 -req \
-          -in /tmp/certs/vault.csr \
-          -CA /tmp/certs/ca.crt \
-          -CAkey /tmp/certs/ca.key \
+          -in /tmp/vault/certs/client.csr \
+          -CA /tmp/vault/certs/ca.crt \
+          -CAkey /tmp/vault/certs/ca.key \
           -CAcreateserial \
-          -out /tmp/certs/vault.crt \
+          -out /tmp/vault/certs/client.crt \
           -days 365 \
           -sha256 \
-          -extfile /tmp/certs/cert.conf
+          -extfile /tmp/vault/certs/cert.conf
 
     - name: Save root CA certificate key to HCPVS
       ansible.builtin.command: |
         vlt secrets create \
-          -o {{ hcp_vault_secrets_org_id }} \
           -p {{ hcpvs.project_id }} \
           -a vault \
-          ssl_ca_certificate_key="{{ lookup('ansible.builtin.file', "/tmp/certs/ca.key") }}"
+          ssl_ca_certificate_key="{{ lookup('ansible.builtin.file', "/tmp/vault/certs/ca.key") }}"
       register: save_ca_key_to_hcpvs_out
       failed_when: save_ca_key_to_hcpvs_out.rc != 0 and 'already exists' not in save_ca_key_to_hcpvs_out.stdout
 
     - name: Update root CA certificate key to HCPVS
       ansible.builtin.command: |
         vlt secrets update \
-          -o {{ hcp_vault_secrets_org_id }} \
           -p {{ hcpvs.project_id }} \
           -a vault \
-          ssl_ca_certificate_key="{{ lookup('ansible.builtin.file', "/tmp/certs/ca.key") }}"
+          ssl_ca_certificate_key="{{ lookup('ansible.builtin.file', "/tmp/vault/certs/ca.key") }}"
       when: save_ca_key_to_hcpvs_out.rc == 1 and 'already exists' in save_ca_key_to_hcpvs_out.stdout
 
     - name: Save root CA certificate to HCPVS
       ansible.builtin.command: |
         vlt secrets create \
-          -o {{ hcp_vault_secrets_org_id }} \
           -p {{ hcpvs.project_id }} \
           -a vault \
-          ssl_ca_certificate="{{ lookup('ansible.builtin.file', "/tmp/certs/ca.crt") }}"
+          ssl_ca_certificate="{{ lookup('ansible.builtin.file', "/tmp/vault/certs/ca.crt") }}"
       register: save_ca_to_hcpvs_out
       failed_when: save_ca_to_hcpvs_out.rc != 0 and 'already exists' not in save_ca_to_hcpvs_out.stdout
 
     - name: Update root CA certificate to HCPVS
       ansible.builtin.command: |
         vlt secrets update \
-          -o {{ hcp_vault_secrets_org_id }} \
           -p {{ hcpvs.project_id }} \
           -a vault \
-          ssl_ca_certificate="{{ lookup('ansible.builtin.file', "/tmp/certs/ca.crt") }}"
+          ssl_ca_certificate="{{ lookup('ansible.builtin.file', "/tmp/vault/certs/ca.crt") }}"
       when: save_ca_to_hcpvs_out.rc == 1 and 'already exists' in save_ca_to_hcpvs_out.stdout
 
     - name: Save vault certificate key to HCPVS
       ansible.builtin.command: |
         vlt secrets create \
-          -o {{ hcp_vault_secrets_org_id }} \
           -p {{ hcpvs.project_id }} \
           -a vault \
-          ssl_certificate_key="{{ lookup('ansible.builtin.file', "/tmp/certs/vault.key") }}"
+          ssl_certificate_key="{{ lookup('ansible.builtin.file', "/tmp/vault/certs/client.key") }}"
       register: save_vault_ca_key_to_hcpvs_out
       failed_when: save_vault_ca_key_to_hcpvs_out.rc != 0 and 'already exists' not in save_vault_ca_key_to_hcpvs_out.stdout
 
     - name: Update vault certificate key to HCPVS
       ansible.builtin.command: |
         vlt secrets update \
-          -o {{ hcp_vault_secrets_org_id }} \
           -p {{ hcpvs.project_id }} \
           -a vault \
-          ssl_certificate_key="{{ lookup('ansible.builtin.file', "/tmp/certs/vault.key") }}"
+          ssl_certificate_key="{{ lookup('ansible.builtin.file', "/tmp/vault/certs/client.key") }}"
       when: save_vault_ca_key_to_hcpvs_out.rc == 1 and 'already exists' in save_vault_ca_key_to_hcpvs_out.stdout
 
     - name: Save vault certificate to HCPVS
       ansible.builtin.command: |
         vlt secrets create \
-          -o {{ hcp_vault_secrets_org_id }} \
           -p {{ hcpvs.project_id }} \
           -a vault \
-          ssl_certificate="{{ lookup('ansible.builtin.file', "/tmp/certs/vault.crt") }}"
+          ssl_certificate="{{ lookup('ansible.builtin.file', "/tmp/vault/certs/client.crt") }}"
       register: save_vault_ca_to_hcpvs_out
       failed_when: save_vault_ca_to_hcpvs_out.rc != 0 and 'already exists' not in save_vault_ca_to_hcpvs_out.stdout
 
     - name: Update vault certificate to HCPVS
       ansible.builtin.command: |
         vlt secrets update \
-          -o {{ hcp_vault_secrets_org_id }} \
           -p {{ hcpvs.project_id }} \
           -a vault \
-          ssl_certificate="{{ lookup('ansible.builtin.file', "/tmp/certs/vault.crt") }}"
+          ssl_certificate="{{ lookup('ansible.builtin.file', "/tmp/vault/certs/client.crt") }}"
       when: save_vault_ca_to_hcpvs_out.rc == 1 and 'already exists' in save_vault_ca_to_hcpvs_out.stdout

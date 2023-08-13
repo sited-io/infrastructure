@@ -4,24 +4,36 @@ disable_mlock = true
 ui            = true
 
 listener "tcp" {
+  address = "127.0.0.1:{{ vault.ports.https }}"
+  tls_disable = true
+}
+
+listener "tcp" {
   address            = "{{ ansible_eth1.ipv4.address }}:{{ vault.ports.https }}"
-  tls_cert_file      = "{{ vault.certs_dir }}/vault-cert.pem"
-  tls_key_file       = "{{ vault.certs_dir }}/vault-key.pem"
-  tls_client_ca_file = "{{ vault.certs_dir }}/vault-ca.pem"
+  tls_client_ca_file = "{{ vault.certs_dir }}/ca.crt"
+  tls_cert_file      = "{{ vault.certs_dir }}/client.crt"
+  tls_key_file       = "{{ vault.certs_dir }}/client.key"
 }
 
 storage "raft" {
   path    = "{{ vault.data_dir }}"
   node_id = "{{ inventory_hostname }}"
-  {% for hostname in other_hosts %}
+{% for hostname in (groups.vault | difference([inventory_hostname]) | list) %}
 
   retry_join {
     leader_tls_servername   = "{{ hostname }}"
     leader_api_addr         = "https://{{ hostvars[hostname].ansible_eth1.ipv4.address }}:{{ vault.ports.https }}"
-    leader_ca_cert_file     = "{{ vault.certs_dir }}/vault-ca.pem"
-    leader_client_cert_file = "{{ vault.certs_dir }}/vault-cert.pem"
-    leader_client_key_file  = "{{ vault.certs_dir }}/vault-key.pem"
+    leader_ca_cert_file     = "{{ vault.certs_dir }}/ca.crt"
+    leader_client_cert_file = "{{ vault.certs_dir }}/client.crt"
+    leader_client_key_file  = "{{ vault.certs_dir }}/client.key"
   }
-  {% endfor %}
+{% endfor %}
+}
 
+seal "gcpckms" {
+  credentials = "{{ vault.config_dir }}/gcp_credentials.json"
+  project     = "{{ vault.auto_unseal.project }}"
+  region      = "{{ vault.auto_unseal.region }}"
+  key_ring    = "{{ vault.auto_unseal.key_ring }}"
+  crypto_key  = "{{ vault.auto_unseal.crypto_key }}"
 }

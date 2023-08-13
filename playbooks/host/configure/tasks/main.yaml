@@ -67,12 +67,12 @@
         state: restarted
         enabled: true
 
-- ansible.builtin.import_tasks: ../ufw/ufw.yaml
+- ansible.builtin.import_tasks: ../../common-tasks/ufw/ufw.yaml
 
 - name: Configure firewall allow internal net
   community.general.ufw:
     rule: allow
-    src: 10.0.0.0/22
+    src: "{{ private_network_range }}"
 
 - name: Disable LLMNR for systemd-resolved
   ansible.builtin.lineinfile:

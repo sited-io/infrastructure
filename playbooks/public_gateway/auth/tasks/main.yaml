@@ -1,5 +1,5 @@
 ---
-- ansible.builtin.import_tasks: ../consul-template/consul-template.yaml
+- ansible.builtin.import_tasks: ../../common-tasks/consul-template/consul-template.yaml
 
 - name: Copy auth proxy nginx config template
   ansible.builtin.template:

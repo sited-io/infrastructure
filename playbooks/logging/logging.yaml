@@ -1,5 +1,4 @@
 ---
-- name: Deploy log shipping software on nomad
-  import_playbook: install.yaml
+- import_playbook: install.yaml
   tags:
     - install

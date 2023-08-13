@@ -28,43 +28,68 @@
           -plaintext ssl_certificate
       register: ssl_certificate_out
 
+    - name: Get GCP credentials from HCPVS
+      ansible.builtin.command: |
+        vlt secrets get \
+          -p {{ hcpvs.project_id }} \
+          -a vault \
+          -plaintext gcp_kms_service_account_key
+      register: gcp_kms_service_account_key_out
+
 - name: Ensure vault config dir
   ansible.builtin.file:
     path: "{{ vault.config_dir }}"
     state: directory
+  notify: Vault Restarted
+
+- name: Ensure certificate directory
+  ansible.builtin.file:
+    path: "{{ vault.certs_dir }}"
+    state: absent
+  notify: Vault Restarted
 
 - name: Ensure certificate directory
   ansible.builtin.file:
     path: "{{ vault.certs_dir }}"
     state: directory
     mode: 0775
+  notify: Vault Restarted
 
 - name: Copy CA certificate
   ansible.builtin.copy:
     content: "{{ ssl_ca_certificate_out.stdout }}"
-    dest: "{{ vault.certs_dir }}/vault-ca.pem"
+    dest: "{{ vault.certs_dir }}/ca.crt"
     owner: root
     group: root
     mode: 0644
+  notify: Vault Restarted
 
 - name: Copy vault certificate
   ansible.builtin.copy:
     content: "{{ ssl_certificate_key_out.stdout }}"
-    dest: "{{ vault.certs_dir }}/vault-key.pem"
+    dest: "{{ vault.certs_dir }}/client.key"
     owner: root
     group: root
     mode: 0644
+  notify: Vault Restarted
 
 - name: Copy vault certificate key
   ansible.builtin.copy:
     content: "{{ ssl_certificate_out.stdout }}"
-    dest: "{{ vault.certs_dir }}/vault-cert.pem"
+    dest: "{{ vault.certs_dir }}/client.crt"
     owner: root
     group: vault
     mode: 0640
+  notify: Vault Restarted
 
-- set_fact:
-    other_hosts: "{{ groups.vault | difference([inventory_hostname]) | list }}"
+- name: Copy GCP service account credentials
+  ansible.builtin.copy:
+    content: "{{ gcp_kms_service_account_key_out.stdout }}"
+    dest: "{{ vault.config_dir }}/gcp_credentials.json"
+    owner: root
+    group: vault
+    mode: 0640
+  notify: Vault Restarted
 
 - name: Copy vault config file
   ansible.builtin.template:
@@ -73,33 +98,14 @@
     owner: vault
     group: vault
     mode: 0664
+  notify: Vault Restarted
 
-- name: Check vault unsealed
-  run_once: true
-  delegate_to: localhost
-  become: false
-  ansible.builtin.command: vault status -format=json
-  register: status_out
-  ignore_errors: true
-
-- set_fact:
-    sealed: "{{ (status_out.stdout | from_json | json_query('sealed')) if status_out.rc == 0 else true }}"
-
-- name: Ensure vault started and enabled
-  ansible.builtin.service:
-    name: vault
-    state: restarted
-    enabled: true
-  when: sealed
-
-# sudo vault operator init --address https://<private-ip-address>:8200 -ca-cert /opt/vault/tls/vault-ca.pem -client-cert /opt/vault/tls/vault-cert.pem -client-key /opt/vault/tls/vault-key.pem
-# sudo vault operator init --address https://10.0.0.9:8200 -ca-cert /opt/vault/tls/vault-ca.pem -client-cert /opt/vault/tls/vault-cert.pem -client-key /opt/vault/tls/vault-key.pem
+# sudo vault operator init --address https://<private-ip-address>:8200 -ca-cert /opt/vault/tls/ca.crt -client-cert /opt/vault/tls/client.crt -client-key /opt/vault/tls/client.key
+# sudo vault operator init --address https://10.0.0.9:8200 -ca-cert /opt/vault/tls/ca.crt -client-cert /opt/vault/tls/client.crt -client-key /opt/vault/tls/client.key
+# sudo vault operator init --address https://10.0.4.4:8200 -ca-cert /opt/vault/tls/ca.crt -client-cert /opt/vault/tls/client.crt -client-key /opt/vault/tls/client.key
 
 # save token as "initial_root_token"
 
-# sudo vault operator unseal --address https://<private_ip_address>:8200 -ca-cert /opt/vault/tls/vault-ca.pem -client-cert /opt/vault/tls/vault-cert.pem -client-key /opt/vault/tls/vault-key.pem
-# sudo vault operator unseal --address https://10.0.0.9:8200 -ca-cert /opt/vault/tls/vault-ca.pem -client-cert /opt/vault/tls/vault-cert.pem -client-key /opt/vault/tls/vault-key.pem
-
-- name: Manually init and unseal vault if not initialized yet
+- name: Manually initialize vault if not initialized yet
   pause:
-    prompt: Login to one vault server and run the init comman. Save Unseal keys to HCPVS.
+    prompt: Login to one vault server and run the init comman. Save restore keys to HCPVS.

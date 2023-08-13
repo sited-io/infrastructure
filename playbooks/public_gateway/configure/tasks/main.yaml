@@ -1,14 +1,25 @@
 ---
-- name: Get cloudflare_origin_cert_key from HCPVS # HCP Vault Secrets
+- name: Get Cloudflare origin certificate from HCPVS # HCP Vault Secrets
   run_once: true
   delegate_to: localhost
   become: false
   ansible.builtin.command: |
     vlt secrets get \
       -p {{ hcpvs.project_id }} \
-      -a service-cluster \
-      -plaintext cloudflare_origin_ssl_certificate_key
-  register: cloudflare_origin_cert_key_out
+      -a Cloudflare \
+      -plaintext origin_certificate
+  register: origin_certificate_out
+
+- name: Get Cloudflare origin certificate key from HCPVS
+  run_once: true
+  delegate_to: localhost
+  become: false
+  ansible.builtin.command: |
+    vlt secrets get \
+      -p {{ hcpvs.project_id }} \
+      -a Cloudflare \
+      -plaintext origin_certificate_key
+  register: origin_certificate_key_out
 
 - name: Configure nginx
   when: inventory_hostname in groups.public_gateway
@@ -32,7 +43,7 @@
 
     - name: Copy Cloudflare origin ca
       ansible.builtin.copy:
-        src: peoplesmarkets.com.pem
+        content: "{{ origin_certificate_out.stdout.replace('\\n', '\n') }}"
         dest: "{{ public_gateway.config_dir }}/origin.pem"
         owner: root
         group: www-data
@@ -41,8 +52,8 @@
 
     - name: Copy Cloudflare origin ca key
       ansible.builtin.copy:
+        content: "{{ origin_certificate_key_out.stdout.replace('\\n', '\n') }}"
         dest: "{{ public_gateway.config_dir }}/origin.key"
-        content: "{{ cloudflare_origin_cert_key_out.stdout.replace('\\n', '\n') }}"
         owner: root
         group: www-data
         mode: "440"

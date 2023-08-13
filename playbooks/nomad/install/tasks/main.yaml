@@ -1,5 +1,5 @@
 ---
-- ansible.builtin.import_tasks: ../hashicorp_repository/hashicorp_repository.yaml
+- ansible.builtin.import_tasks: ../../common-tasks/hashicorp_repository/hashicorp_repository.yaml
 
 - name: Install nomad package
   ansible.builtin.apt:
@@ -12,11 +12,6 @@
     name: nomad
     state: started
     enabled: true
-
-- name: Install HCP Vault Secrets cli tool
-  ansible.builtin.apt:
-    name: vlt
-    state: latest
 
 - name: Ensure CNI plugin dir exists
   ansible.builtin.file:

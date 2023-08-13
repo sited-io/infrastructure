@@ -10,10 +10,24 @@
     - "{{ public_gateway.config_dir }}"
     - "{{ public_gateway.sites_dir }}"
 
+- name: Check nginx installed
+  ansible.builtin.command: nginx -v
+  register: nginx_version_out
+  failed_when: nginx_version_out.rc != 0 and nginx_version_out.rc != 2
+
+- ansible.builtin.set_fact:
+    nginx_installed: "{{ nginx_version_out.stderr | regex_replace('nginx version: ', '') | regex_replace('\/', '-') == nginx_version }}"
+  when: nginx_version_out.rc == 0
+
+- ansible.builtin.set_fact:
+    nginx_installed: false
+  when: nginx_version_out.rc != 0
+
 - name: Ensure build dependencies installed
   ansible.builtin.apt:
     name: "{{ packages }}"
     state: latest
+  when: not nginx_installed
   vars:
     packages:
       - build-essential
@@ -35,6 +49,7 @@
     owner: admin
     group: admin
     remote_src: yes
+  when: not nginx_installed
 
 - name: Configure make
   ansible.builtin.command: |
@@ -52,9 +67,11 @@
       --with-http_v2_module \
       --with-stream \
       --with-stream_ssl_module
+  when: not nginx_installed
 
 - name: Install nginx
   community.general.make:
     chdir: /home/admin/{{ nginx_version }}/
     target: install
-    jobs: 4
+    jobs: "{{ ansible_processor_vcpus }}"
+  when: not nginx_installed

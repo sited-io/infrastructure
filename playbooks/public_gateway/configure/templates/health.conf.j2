@@ -2,7 +2,7 @@ server {
   listen 443 ssl;
   listen [::]:443 ssl;
 
-  server_name health-{{ domain }};
+  server_name {{ public_gateway.health_url }};
 
   ssl_certificate {{ public_gateway.config_dir }}/origin.pem;
   ssl_certificate_key {{ public_gateway.config_dir }}/origin.key;

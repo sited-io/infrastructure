@@ -1,3 +1,4 @@
+{% if 'vault' in groups %}
 upstream vault_backends {
 {% for ip in (groups.vault | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address'])) %}
   server {{ ip }}:{{ vault.ports.https }};
@@ -18,7 +19,9 @@ server {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   }
 }
+{% endif %}
 
+{% if 'consul_servers' in groups %}
 upstream consul_backends {
 {% for ip in (groups.consul_servers | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address'])) %}
   server {{ ip }}:{{ consul.ports.https }};
@@ -39,7 +42,9 @@ server {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   }
 }
+{% endif %}
 
+{% if 'nomad_servers' in groups %}
 upstream nomad_backends {
 {% for ip in (groups.nomad_servers | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address'])) %}
   server {{ ip }}:{{ nomad.ports.http }};
@@ -60,7 +65,9 @@ server {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   }
 }
+{% endif %}
 
+{% if 'cockroach' in groups %}
 upstream cockroach_backends {
 {% for ip in (groups.cockroach | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address'])) %}
   server {{ ip }}:{{ cockroach.ports.http }};
@@ -81,3 +88,4 @@ server {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   }
 }
+{% endif %}

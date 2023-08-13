@@ -31,4 +31,4 @@
     vault read -field=token consul/creds/{{ item }}_role
   register: token_out
 
-- set_fact: { "{{ item }}_token": "{{ token_out.stdout }}" }
+- ansible.builtin.set_fact: { "{{ item }}_token": "{{ token_out.stdout }}" }

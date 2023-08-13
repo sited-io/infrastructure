@@ -30,7 +30,7 @@
       register: enable_userpass_out
       failed_when: enable_userpass_out.rc != 0 and 'path is already in use' not in enable_userpass_out.stderr
 
-    - set_fact:
+    - ansible.builtin.set_fact:
         admin_password: "{{ 999999999999999 | random | to_uuid }}"
 
     - name: Create admin user or update
@@ -40,8 +40,19 @@
           policies=admin
       register: create_admin_out
         
-    - name: Save password to .bashrc
-      ansible.builtin.lineinfile:
-        path: ~/.bashrc
-        regexp: "^export VAULT_ADMIN_PASSWORD="
-        line: "export VAULT_ADMIN_PASSWORD='{{ admin_password }}'"
+    - name: Save admin password to HCPVS # HCP Vault Secrets
+      ansible.builtin.command: |
+        vlt secrets create \
+          -p {{ hcpvs.project_id }} \
+          -a vault \
+          admin_password="{{ admin_password }}"
+      register: save_admin_password_out
+      failed_when: save_admin_password_out.rc != 0 and 'already exists' not in save_admin_password_out.stdout
+
+    - name: Update admin password on HCPVS
+      ansible.builtin.command: |
+        vlt secrets update \
+          -p {{ hcpvs.project_id }} \
+          -a vault \
+          admin_password="{{ admin_password }}"
+      when: save_admin_password_out.rc == 1 and 'already exists' in save_admin_password_out.stdout

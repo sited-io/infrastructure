@@ -1,5 +1,5 @@
 ---
-- ansible.builtin.import_tasks: ../ufw/ufw.yaml
+- ansible.builtin.import_tasks: ../../common-tasks/ufw/ufw.yaml
 
 - name: Configure firewall allow http 443
   community.general.ufw:

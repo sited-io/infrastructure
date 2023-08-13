@@ -1,5 +1,5 @@
 ---
-- ansible.builtin.import_tasks: ../hashicorp_repository/hashicorp_repository.yaml
+- ansible.builtin.import_tasks: ../../common-tasks/hashicorp_repository/hashicorp_repository.yaml
 
 - name: Install vault package
   ansible.builtin.apt:

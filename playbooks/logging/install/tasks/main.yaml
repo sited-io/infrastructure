@@ -1,4 +1,6 @@
 ---
+- ansible.builtin.import_tasks: ../../common-tasks/nomad_login/nomad_login.yaml
+
 - name: Ensure working directory
   ansible.builtin.file:
     path: /tmp/vector/install
@@ -8,11 +10,11 @@
   ansible.builtin.command: |
     vlt secrets get \
       -p {{ hcpvs.project_id }} \
-      -a service-cluster \
-      -plaintext graphana_log_shipper_api_key
+      -a Grafana \
+      -plaintext log_shipper_api_key
   register: log_shipper_api_key_out
 
-- set_fact:
+- ansible.builtin.set_fact:
     log_shipper_api_key: "{{ log_shipper_api_key_out.stdout }}"
 
 - name: Prepare vector job file
@@ -21,4 +23,8 @@
     dest: /tmp/vector/install/vector.nomad
 
 - name: Deploy Vector nomad job
-  command: nomad job run /tmp/vector/install/vector.nomad
+  ansible.builtin.command: |
+    nomad job run \
+      -address={{ nomad.url }} \
+      -token={{ nomad_token }} \
+      /tmp/vector/install/vector.nomad

@@ -5,3 +5,10 @@
     state: restarted
     enabled: true
     daemon_reload: true
+
+- name: envoy-sidecar for cockroach-http
+  ansible.builtin.service:
+    name: envoy-sidecar@cockroach-http.service
+    state: restarted
+    enabled: true
+    daemon_reload: true

@@ -1,0 +1,15 @@
+---
+all:
+  vars:
+    public_gateway:
+      config_dir: /etc/nginx
+      sites_dir: /etc/nginx/conf.d
+      nginx_package_url: https://nginx.org/download/{{ nginx_version }}.tar.gz
+      health_url: "health.{{ domain }}"
+
+  children:
+    public_gateway:
+      hosts:
+        eudea.peoplesmarkets.com:
+        euliania.peoplesmarkets.com:
+        eurelia.peoplesmarkets.com:

@@ -1,0 +1,29 @@
+---
+- ansible.builtin.set_fact:
+    vault_addr: "{{ vault.url }}"
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Get vault admin password from HCPVS
+      ansible.builtin.command: |
+        vlt secrets get \
+          -p {{ hcpvs.project_id }} \
+          -a vault \
+          -plaintext admin_password
+      register: admin_password_out
+
+    - name: Login to vault with admin token
+      ansible.builtin.command: |
+        vault login \
+          -method=userpass \
+          -non-interactive=true \
+          -field=token \
+          -address={{ vault_addr }}
+          username=admin \
+          password={{ admin_password_out.stdout }}
+      register: admin_token_out
+
+- ansible.builtin.set_fact:
+    vault_token: "{{ admin_token_out.stdout }}"

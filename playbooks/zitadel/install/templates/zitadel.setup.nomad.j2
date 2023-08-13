@@ -59,6 +59,7 @@ FirstInstance:
       Host: '{{ zitadel.smtp.host }}'
       User: '[[ with secret "kv/zitadel/smtp" ]][[ .Data.username ]][[ end ]]'
       Password: '[[ with secret "kv/zitadel/smtp" ]][[ .Data.password ]][[ end ]]'
+    TLS: true
     From: '{{ zitadel.smtp.from }}'
     FromName: '{{ zitadel.smtp.from }}'
 EOF
