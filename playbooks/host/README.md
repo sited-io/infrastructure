@@ -1,4 +1,4 @@
-# Playbook - [Configuring host systems](playbooks/host/)
+# Playbook - [Configuring host systems](.)
 
 ```sh
 # dev
