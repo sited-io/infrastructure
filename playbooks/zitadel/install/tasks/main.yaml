@@ -1,5 +1,20 @@
 ---
+# @meta description: >
+# Requires [Vault](../../vault/) to be run
+#
+# Requires [Nomad](../../nomad/) to be run
+#
+# Requires [Cockroach](../../cockroach) to be run and zitadel users to be configured in Vault
+#
+# Requires SMTP credentials and 32 bit master_key to be saved to Vault
+#
+# - Deploy init job to nomad
+# - Deploy setup job to nomad
+# - Deploy start job to nomad
+# @end
+
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
+
 - ansible.builtin.import_tasks: ../../common-tasks/nomad_login/nomad_login.yaml
 
 - name: Ensure working directory

@@ -1,5 +1,7 @@
 # peoplesmarkets.com - Infrastructure
 
+## [Provisioning](./provisioning/)
+
 ## Playbooks
 
 ### Service Cluster
@@ -18,24 +20,10 @@
 
 #### [1: Allocation logs](./playbooks/logging/)
 
-## Databases
+### Databases
 
 #### [1: Cockroach](./playbooks/cockroach/)
 
-## Auth
+### Auth
 
-### 1: Zitadel
-
-```sh
-# dev
-ansible-playbook -i inventories/dev/ playbooks/zitadel/install.yaml
-ansible-playbook -i inventories/dev/ playbooks/public_gateway/auth.yaml
-ansible-playbook -i inventories/dev/ playbooks/zitadel/zitadel.yaml
-```
-
-```sh
-# prod
-ansible-playbook -i inventories/prod/ playbooks/zitadel/install.yaml
-ansible-playbook -i inventories/prod/ playbooks/public_gateway/auth.yaml
-ansible-playbook -i inventories/prod/ playbooks/zitadel/zitadel.yaml
-```
+#### [1: Zitadel](./playbooks/zitadel/)

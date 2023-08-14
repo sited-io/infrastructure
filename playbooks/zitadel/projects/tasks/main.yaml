@@ -1,4 +1,11 @@
 ---
+# @meta description: >
+#
+# Requires service user set up in Zitadel and client_secret saved to Vault
+#
+# - Configure zitadel projects
+# @end
+
 - name: Manually add service user with credentials
   pause:
     prompt: Login to Zitadel admin UI and create service user. Afterwards add credentials to vault at kv/zitadel/users/service

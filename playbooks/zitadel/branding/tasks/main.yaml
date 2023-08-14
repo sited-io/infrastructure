@@ -1,4 +1,12 @@
 ---
+# @meta description: >
+#
+# Requires service user set up in Zitadel and client_secret saved to Vault
+#
+# - Configure organization branding
+# @end
+# @todo automation: Upload Assets like logo and icon in order to configure them here aswell
+
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
 
 - name: Get zitadel service user client secret
