@@ -4,23 +4,11 @@
 
 ### Service Cluster
 
-#### [1: Configuring host systems](playbooks/host/)
+#### [1: Configuring host systems](./playbooks/host/)
 
-#### [2: Public Gateway (proxy)](playbooks/public_gateway/)
+#### [2: Public Gateway (proxy)](./playbooks/public_gateway/)
 
-### 3: Vault
-
-```sh
-# dev
-ansible-playbook -i inventories/dev/ playbooks/vault/vault.yaml
-ansible-playbook -i inventories/dev/ playbooks/public_gateway/public_gateway.yaml --tags configure
-```
-
-```sh
-# prod
-ansible-playbook -i inventories/prod/ playbooks/vault/vault.yaml
-ansible-playbook -i inventories/prod/ playbooks/public_gateway/public_gateway.yaml --tags configure
-```
+#### [3: Vault](./playbooks/vault/)
 
 ### 4: Consul
 

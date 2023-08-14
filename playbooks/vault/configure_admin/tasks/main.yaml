@@ -1,4 +1,10 @@
 ---
+# @meta description: >
+# Configure Vault admin role
+# - Get root token from [HCPVS](https://developer.hashicorp.com/hcp/docs/vault-secrets)
+# - Configure Vault admin role and save password to [HCPVS](https://developer.hashicorp.com/hcp/docs/vault-secrets)
+# @end
+
 - name: Get initial_root_token from HCPVS
   ansible.builtin.command: |
     vlt secrets get \
@@ -39,7 +45,7 @@
           password={{ admin_password }} \
           policies=admin
       register: create_admin_out
-        
+
     - name: Save admin password to HCPVS # HCP Vault Secrets
       ansible.builtin.command: |
         vlt secrets create \

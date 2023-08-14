@@ -1,4 +1,9 @@
 ---
+# @meta description: >
+# Prepare Vault deployment
+# - Create self signed SSL certificate and save to [HCPVS](https://developer.hashicorp.com/hcp/docs/vault-secrets)
+# @end
+
 - run_once: true
   delegate_to: localhost
   become: false

@@ -1,4 +1,4 @@
-# Playbook - [Configuring host systems](.)
+# Playbook - [Public Gateway (proxy)](.)
 
 Developement environment
 
