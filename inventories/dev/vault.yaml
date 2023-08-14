@@ -10,6 +10,11 @@ all:
       ports:
         https: 8200
         cluster: 8201
+      auto_unseal:
+        project: peoplesmarkets
+        region: europe-west3
+        key_ring: vault-dev-auto-key-ring
+        crypto_key: vault-dev-auto-crypto-key
 
   children:
     vault:

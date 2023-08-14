@@ -65,7 +65,7 @@
 
     - name: Manually initialize ACL on consul server
       pause:
-        prompt: Login to one consul server and run 'consul acl bootstrap' save SecretID to 'kv/root/consul/bootstrap_token'
+        prompt: Login to one consul server and run 'consul acl bootstrap' save SecretID to 'kv/root/consul/bootstrap_token' 'token=****'
 
     - name: Get consul bootstrap token from vault
       ansible.builtin.command: |

@@ -34,10 +34,21 @@
     VAULT_TOKEN: "{{ vault_token }}"
     NOMAD_ADDR: "{{ nomad.url }}"
   block:
-    - name: Initialize ACL and get bootstrap_token
-      command: nomad acl bootstrap -json
-      register: acl_bootstrap_out
-      ignore_errors: true
+    - name: Ensure kv secret engine is enabled on vault
+      ansible.builtin.command: |
+        vault secrets enable -path=kv kv
+      register: enable_kv2_out
+      failed_when: enable_kv2_out.rc != 0 and 'path is already in use' not in enable_kv2_out.stderr
+
+    - name: Manually initialize ACL on nomad server
+      pause:
+        prompt: Login to one nomad server and run 'nomad acl bootstrap' save SecretID to 'kv/root/nomad/bootstrap_token' 'token=****'
+
+    - name: Get nomad bootstrap token from vault
+      ansible.builtin.command: |
+        vault read -field=token \
+          kv/root/nomad/bootstrap_token
+      register: bootstrap_token_out
 
     - name: Enable nomad secret engine on vault
       ansible.builtin.command: |
@@ -49,14 +60,7 @@
       ansible.builtin.command: |
         vault write nomad/config/access \
           address={{ nomad.url }} \
-          token={{ acl_bootstrap_out.stdout | from_json | json_query('SecretID') }}
-      when: acl_bootstrap_out.rc == 0
-
-    - name: Save bootstrap token to vault
-      ansible.builtin.command: |
-        vault write kv/root/nomad/bootstrap_token \
-          token={{ acl_bootstrap_out.stdout | from_json | json_query('SecretID') }}
-      when: acl_bootstrap_out.rc == 0
+          token={{ bootstrap_token_out.stdout }}
 
     - name: Create management role
       ansible.builtin.command: |

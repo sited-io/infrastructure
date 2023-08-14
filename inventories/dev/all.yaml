@@ -54,3 +54,14 @@ all:
         warnDark: "#ff3b5b"
         backgroundDark: "#1e1e1e"
         fontDark: "#e8eaed"
+
+  hosts:
+    eudea-dev.peoplesmarkets.com:
+    euliania-dev.peoplesmarkets.com:
+    eurelia-dev.peoplesmarkets.com:
+    euria-dev.peoplesmarkets.com:
+    eudokia-dev.peoplesmarkets.com:
+    eudel-dev.peoplesmarkets.com:
+    euri-dev.peoplesmarkets.com:
+    eugene-dev.peoplesmarkets.com:
+    euclid-dev.peoplesmarkets.com:
