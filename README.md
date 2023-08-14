@@ -1,18 +1,10 @@
 # peoplesmarkets.com - Infrastructure
 
-## Service Cluster
+## Playbooks
 
-### 1: Host
+### Service Cluster
 
-```sh
-# dev
-ansible-playbook -i inventories/dev/ playbooks/host/host.yaml
-```
-
-```sh
-# prod
-ansible-playbook -i inventories/prod/ playbooks/host/host.yaml
-```
+#### 1: [Configuring host systems](playbooks/host/)
 
 ### 2: Public Gateway (proxy)
 
