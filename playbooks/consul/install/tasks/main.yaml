@@ -1,6 +1,6 @@
 ---
 # @meta description: >
-# Install Consul
+# - Install [Consul](https://developer.hashicorp.com/consul)
 # @end
 
 - ansible.builtin.import_tasks: ../../common-tasks/hashicorp_repository/hashicorp_repository.yaml

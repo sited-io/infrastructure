@@ -1,7 +1,7 @@
-# Role - prepare
+# Role - configure
 
-Prepare Vault deployment
-- Create self signed SSL certificate and save to [HCPVS](https://developer.hashicorp.com/hcp/docs/vault-secrets)
+Configure Nomad
+- Basic configuration
 
 ## Table of content
 

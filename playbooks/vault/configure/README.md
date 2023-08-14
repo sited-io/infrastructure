@@ -1,4 +1,4 @@
-# Role - install
+# Role - configure
 
 Requires [provisioning](../../../provisioning/) to be run or KMS keyring to be set up on GCP.
 

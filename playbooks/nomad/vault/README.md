@@ -1,7 +1,9 @@
-# Role - prepare
+# Role - vault
 
-Prepare Vault deployment
-- Create self signed SSL certificate and save to [HCPVS](https://developer.hashicorp.com/hcp/docs/vault-secrets)
+Requires [Vault](../../vault/) to be run in order to use consul secret engine
+
+- Create nomad agent roles on Vault
+- Configure nomad agents with specific roles
 
 ## Table of content
 

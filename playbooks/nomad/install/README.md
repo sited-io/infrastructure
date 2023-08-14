@@ -1,6 +1,8 @@
 # Role - install
 
-- Install [Consul](https://developer.hashicorp.com/consul)
+- Install [Nomad](https://developer.hashicorp.com/nomad)
+- Install [CNI plugin](https://github.com/containernetworking/cni)
+- Install [Docker](https://docs.docker.com/)
 
 ## Table of content
 

@@ -1,4 +1,9 @@
 ---
+# @meta description: >
+# Configure Nomad
+# - Basic configuration
+# @end
+
 - name: Ensure Nomad directories exists
   ansible.builtin.file:
     path: "{{ item }}/"

@@ -1,4 +1,12 @@
 ---
+# @meta description: >
+# Requires [Vault](../../vault/) to be run in order to use nomad secret engine
+#
+# - Bootstrap ACL
+# - Enable [nomad secret engine](https://developer.hashicorp.com/vault/docs/secrets/nomad) on Vault
+# - Create and configure Nomad management role
+# @end
+
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
 
 - name: Ensure Nomad policies directory
@@ -32,9 +40,10 @@
       ignore_errors: true
 
     - name: Enable nomad secret engine on vault
-      ansible.builtin.command: vault secrets enable nomad
-      register: enable_nomad
-      failed_when: enable_nomad.rc != 0 and 'already in use' not in enable_nomad.stderr
+      ansible.builtin.command: |
+        vault secrets enable -path=nomad nomad
+      register: enable_nomad_out
+      failed_when: enable_nomad_out.rc != 0 and 'already in use' not in enable_nomad_out.stderr
 
     - name: Configure nomad secret engine
       ansible.builtin.command: |

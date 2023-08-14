@@ -12,19 +12,7 @@
 
 #### [4: Consul](./playbooks/consul/)
 
-### 5: Nomad
-
-```sh
-# dev
-ansible-playbook -i inventories/dev/ playbooks/nomad/nomad.yaml
-ansible-playbook -i inventories/dev/ playbooks/public_gateway/public_gateway.yaml --tags configure
-```
-
-```sh
-# prod
-ansible-playbook -i inventories/prod/ playbooks/nomad/nomad.yaml
-ansible-playbook -i inventories/prod/ playbooks/public_gateway/public_gateway.yaml --tags configure
-```
+#### [5: Nomad](./playbooks/nomad/)
 
 ## Monitoring
 
