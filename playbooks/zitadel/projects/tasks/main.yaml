@@ -5,6 +5,7 @@
 #
 # - Configure zitadel projects
 # @end
+# @todo automation: Configure links to privacy-policy and terms-of-service
 
 - name: Manually add service user with credentials
   pause:
