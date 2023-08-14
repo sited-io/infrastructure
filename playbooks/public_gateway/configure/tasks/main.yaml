@@ -1,4 +1,9 @@
 ---
+# @meta description: >
+# Configure public gateway
+# - Get [Cloudflare Origin Certificate](https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/)
+# - Copy over nginx configuration for health endpoind and tools UI
+# @end
 - name: Get Cloudflare origin certificate from HCPVS # HCP Vault Secrets
   run_once: true
   delegate_to: localhost

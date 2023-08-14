@@ -1,8 +1,0 @@
----
-# @meta author: [Maxi-Teme](https://github.com/Maxi-Teme)
-galaxy_info:
-  description: Role to initially configure host systems
-  author: Maximilian Temeschinko
-  license: MIT
-
-dependencies:

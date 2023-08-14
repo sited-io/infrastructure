@@ -1,4 +1,11 @@
 ---
+# @meta description: >
+# Build nginx from source in order to get updated versions and addional modules
+# - Install build dependencies
+# - Download and install nginx from source
+# @end
+# @var nginx_version:description: Nginx Version to install, e.g. 'nginx-1.25.1'
+
 - name: Ensure directories exists
   ansible.builtin.file:
     path: "{{ item }}"

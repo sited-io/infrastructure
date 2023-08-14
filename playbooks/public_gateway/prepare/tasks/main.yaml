@@ -1,4 +1,8 @@
 ---
+# @meta description: >
+# Prepare public gateway installation and configuration
+# - Add allow https access to firewall rules
+# @end
 - ansible.builtin.import_tasks: ../../common-tasks/ufw/ufw.yaml
 
 - name: Configure firewall allow http 443

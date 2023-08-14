@@ -1,7 +1,6 @@
-# Role - Configure host systems
+# Role - configure
 
-Role to initially configure host systems.
-
+Role to initially configure host systems
 - Update apt packages
 - Set hostname
 - Use ntp for clock synchronization from [CockroachDB docs](https://www.cockroachlabs.com/docs/stable/deploy-cockroachdb-on-premises#step-1-synchronize-clocks)
@@ -40,11 +39,3 @@ private_network_range: 10.0.0.0/8
 ## Dependencies
 
 None.
-
-## License
-
-MIT
-
-## Author
-
-Maximilian Temeschinko
