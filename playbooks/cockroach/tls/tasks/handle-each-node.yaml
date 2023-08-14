@@ -20,7 +20,7 @@
           cockroach-sql-gateway.service.dc1.consul \
           {% for ip in lb_ips %} {{ ip }} {% endfor %} \
           localhost \
-          127.0.0.1
+          {{ localhost_ip }}
 
     - ansible.builtin.set_fact:
         certificate: "{{ lookup('ansible.builtin.file', '/tmp/cockroach/tls/certs/node.crt') }}"

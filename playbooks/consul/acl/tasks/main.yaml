@@ -82,7 +82,7 @@
     - name: Configure consul secret engine
       ansible.builtin.command: |
         vault write consul/config/access \
-          address={{ consul.url }} \
+          address={{ localhost_ip }}:{{ consul.ports.http }} \
           token={{ bootstrap_token_out.stdout }}
       register: configure_consul_secret_engine_out
       failed_when: configure_consul_secret_engine_out.rc != 0 and 'no longer allowed' not in configure_consul_secret_engine_out.stderr

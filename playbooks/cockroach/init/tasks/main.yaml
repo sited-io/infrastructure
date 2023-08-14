@@ -73,7 +73,7 @@
     - name: Create management user on cockroach
       ansible.builtin.command: |
         cockroach sql \
-          --url postgresql://root@127.0.0.1:{{ cockroach.ports.sql }}/defaultdb?sslrootcert={{ cockroach.certs_dir }}/ca.crt&sslcert={{ cockroach.certs_dir }}/client.root.crt&sslkey={{ cockroach.certs_dir }}/client.root.key&sslmode=verify-full \
+          --url postgresql://root@{{ localhost_ip }}:{{ cockroach.ports.sql }}/defaultdb?sslrootcert={{ cockroach.certs_dir }}/ca.crt&sslcert={{ cockroach.certs_dir }}/client.root.crt&sslkey={{ cockroach.certs_dir }}/client.root.key&sslmode=verify-full \
           --execute "CREATE USER IF NOT EXISTS global_management WITH PASSWORD '{{ global_management_password }}';" \
           --execute "ALTER USER global_management WITH PASSWORD '{{ global_management_password }}';" \
           --execute "GRANT admin TO global_management;"

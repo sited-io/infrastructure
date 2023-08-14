@@ -8,7 +8,7 @@ User=root
 Restart=on-failure
 RestartSec=10s
 EnvironmentFile={{ systemd_dir }}/envoy-sidecar@%i.env
-ExecStart=consul connect envoy -sidecar-for %i -admin-bind "127.0.0.1:${ENVOY_ADMIN_PORT}"
+ExecStart=consul connect envoy -sidecar-for %i -admin-bind "{{ localhost_ip }}:${ENVOY_ADMIN_PORT}"
 KillSignal=SIGINT
 
 [Install]

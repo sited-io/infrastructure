@@ -4,7 +4,7 @@ disable_mlock = true
 ui            = true
 
 listener "tcp" {
-  address = "127.0.0.1:{{ vault.ports.https }}"
+  address = "{{ localhost_ip }}:{{ vault.ports.https }}"
   tls_disable = true
 }
 
