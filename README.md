@@ -10,7 +10,7 @@
 
 #### [3: Vault](./playbooks/vault/)
 
-### [4: Consul](./playbooks/consul/)
+#### [4: Consul](./playbooks/consul/)
 
 ### 5: Nomad
 
