@@ -1,6 +1,7 @@
 # Role - consul
 
 Requires [Vault](../../vault/) to be run
+
 Requires [Consul](../../consul/) to be run in order to register nomad agents
 
 - Create Consul policies for Nomad agents

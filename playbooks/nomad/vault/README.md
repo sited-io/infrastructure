@@ -1,6 +1,6 @@
 # Role - vault
 
-Requires [Vault](../../vault/) to be run in order to use consul secret engine
+Requires [Vault](../../vault/) to be run
 
 - Create nomad agent roles on Vault
 - Configure nomad agents with specific roles
