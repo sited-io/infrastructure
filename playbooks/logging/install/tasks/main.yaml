@@ -1,4 +1,11 @@
 ---
+# @meta description: >
+# Requires [Grafana Cloud](https://grafana.com/products/cloud/)
+#
+# - Get Grafana service user credentials from [HCPVS](https://developer.hashicorp.com/hcp/docs/vault-secrets)
+# - Run [Vector](https://github.com/vectordotdev/vector) nomad job
+# @end
+
 - ansible.builtin.import_tasks: ../../common-tasks/nomad_login/nomad_login.yaml
 
 - name: Ensure working directory

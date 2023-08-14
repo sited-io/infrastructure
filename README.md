@@ -14,19 +14,9 @@
 
 #### [5: Nomad](./playbooks/nomad/)
 
-## Monitoring
+### Monitoring
 
-### 1: Allocation logs
-
-```sh
-# dev
-ansible-playbook -i inventories/dev/ playbooks/logging/logging.yaml
-```
-
-```sh
-# prod
-ansible-playbook -i inventories/prod/ playbooks/logging/logging.yaml
-```
+#### [1: Allocation logs](./playbooks/logging/)
 
 ## Databases
 
