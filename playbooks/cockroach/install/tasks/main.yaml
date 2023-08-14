@@ -1,4 +1,8 @@
 ---
+# @meta description: >
+# - Install Cockroach binary
+# @end
+
 - run_once: true
   delegate_to: localhost
   become: false

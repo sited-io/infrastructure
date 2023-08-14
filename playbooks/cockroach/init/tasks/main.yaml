@@ -1,4 +1,9 @@
 ---
+# @meta description: >
+# - Initialize cockroachdb
+# - Create global management user
+# @end
+
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
 
 - run_once: true

@@ -20,19 +20,7 @@
 
 ## Databases
 
-### 1: Cockroach
-
-```sh
-# dev
-ansible-playbook -i inventories/dev/ playbooks/cockroach/cockroach.yaml
-ansible-playbook -i inventories/dev/ playbooks/public_gateway/public_gateway.yaml --tags configure
-```
-
-```sh
-# prod
-ansible-playbook -i inventories/prod/ playbooks/cockroach/cockroach.yaml
-ansible-playbook -i inventories/prod/ playbooks/public_gateway/public_gateway.yaml --tags configure
-```
+#### [1: Cockroach](./playbooks/cockroach/)
 
 ## Auth
 

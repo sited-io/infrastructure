@@ -1,7 +1,19 @@
 ---
+# @meta description: >
+# Requires [Vault](../../vault/) to be run
+#
+# Requires [Consul](../../consul/) to be run
+#
+# Requires [Nomad](../../nomad/) to be run
+#
+# - Install and configure [envoy](https://www.envoyproxy.io/docs) to run as sidecar proxy for cockroach services
+# - Deploy ingress gateway for cockroach sql service to nomad
+# @end
+
 - ansible.builtin.import_tasks: ../../common-tasks/envoy/envoy.yaml
 
 - ansible.builtin.import_tasks: ../../common-tasks/consul_login/consul_login.yaml
+
 - ansible.builtin.import_tasks: ../../common-tasks/nomad_login/nomad_login.yaml
 
 - run_once: true
