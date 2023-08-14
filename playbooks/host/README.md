@@ -1,15 +1,17 @@
 # Playbook - [Configuring host systems](.)
 
+Developement environment
+
 ```sh
-# dev
 ansible-playbook -i inventories/dev/ playbooks/host/host.yaml
 ```
 
+Production environment
+
 ```sh
-# prod
 ansible-playbook -i inventories/prod/ playbooks/host/host.yaml
 ```
 
 ## Roles
 
-### 1: [Configure](configure)
+### [1: Configure](configure)
