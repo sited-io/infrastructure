@@ -1,4 +1,12 @@
 ---
+# @meta description: >
+# Requires [Vault](../../vault/) to be run in order to use consul secret engine
+#
+# - Manually bootstrap ACL after configuration and save bootstrap token to Vault
+# - Enable [consul secret engine](https://developer.hashicorp.com/vault/docs/secrets/consul) on Vault
+# - Create and configure Consul server and agent roles
+# @end
+
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
 
 - name: Ensure consul config directory

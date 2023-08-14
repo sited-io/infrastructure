@@ -1,4 +1,13 @@
 ---
+# @meta description: >
+# Requires [Vault](../../vault/) to be run in order to use PKI
+#
+# - Enable and configure [PKI](https://developer.hashicorp.com/vault/docs/secrets/pki) on Vault for Consul certificates
+# - Install and configure [consul-template](https://github.com/hashicorp/consul-template) in order to update consul agent configuration when certificates get refreshed
+# @end
+#
+# @todo monitoring: Monitor certificate expiry and alert if certificates did not get refreshed within threshold
+
 - ansible.builtin.import_tasks: ../../common-tasks/consul-template/consul-template.yaml
 
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
@@ -135,17 +144,15 @@
       ansible.builtin.copy:
         src: renew-consul-agent-certs.policy.hcl
         dest: /tmp/consul/tls/renew-consul-agent-certs.policy.hcl
-    
+
     - name: Create policy
-      ansible.builtin.command:
-        vault policy write renew-consul-agent-certs \
-          /tmp/consul/tls/renew-consul-agent-certs.policy.hcl
-    
+      ansible.builtin.command: vault policy write renew-consul-agent-certs \
+        /tmp/consul/tls/renew-consul-agent-certs.policy.hcl
+
     - name: Get vault token
-      ansible.builtin.command:
-        vault token create -field=token \
-          -policy=renew-consul-agent-certs \
-          -period=24h
+      ansible.builtin.command: vault token create -field=token \
+        -policy=renew-consul-agent-certs \
+        -period=24h
       register: vault_token_out
 
 - ansible.builtin.set_fact:

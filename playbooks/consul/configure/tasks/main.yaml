@@ -1,4 +1,9 @@
 ---
+# @meta description: >
+# Configure Consul
+# - Basic configuration with initial gossip key
+# @end
+
 - name: Ensure consul directories
   ansible.builtin.file:
     path: "{{ item }}"

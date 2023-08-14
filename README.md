@@ -10,19 +10,7 @@
 
 #### [3: Vault](./playbooks/vault/)
 
-### 4: Consul
-
-```sh
-# dev
-ansible-playbook -i inventories/dev/ playbooks/consul/consul.yaml
-ansible-playbook -i inventories/dev/ playbooks/public_gateway/public_gateway.yaml --tags configure
-```
-
-```sh
-# prod
-ansible-playbook -i inventories/prod/ playbooks/consul/consul.yaml
-ansible-playbook -i inventories/prod/ playbooks/public_gateway/public_gateway.yaml --tags configure
-```
+### [4: Consul](./playbooks/consul/)
 
 ### 5: Nomad
 
