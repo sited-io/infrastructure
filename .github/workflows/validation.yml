@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: ansible-galaxy collection install community.general.ufw; ansible-galaxy collection install community.general.make
     - name: Run ansible-lint
       uses: ansible/ansible-lint-action@main
   Security:
