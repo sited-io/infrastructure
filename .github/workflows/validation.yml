@@ -8,8 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+      #- name: Run ansible-lint
+      #  uses: ansible/ansible-lint-action@main
     - name: Run ansible-lint
-      uses: ansible/ansible-lint-action@main
+      # replace `main` with any valid ref, or tags like `v6`
+      uses: ansible-community/ansible-lint-action@v6.0.2
+      with:
+        args: "ansible" # my ansible files in a folder
   Security:
     runs-on: ubuntu-latest
     steps:
