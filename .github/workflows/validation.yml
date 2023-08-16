@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Run scan
+    - name: Run kics scan
       uses: checkmarx/kics-github-action@v1.7.0
       with:
         path: ./
@@ -17,3 +17,5 @@ jobs:
         type: Ansible
     - name: Display results
       run: cat kicsk-results/results.json
+    - name: Run ansible-lint
+      uses: ansible/ansible-lint-action@main
