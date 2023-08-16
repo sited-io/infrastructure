@@ -1,0 +1,5 @@
+---
+- hosts: cockroach
+  become: true
+  roles:
+    - cockroach

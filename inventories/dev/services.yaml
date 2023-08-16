@@ -1,0 +1,19 @@
+---
+all:
+  vars:
+    services:
+      github_service_deployer_password_key: DEV_SERVICE_DEPLOYER_PASSWORD
+      services:
+        - name: zitadel
+          database: zitadel
+          database_user: zitadel_admin
+          database_roles:
+            - CREATEDB
+            - CREATEROLE
+            - CREATELOGIN
+        - name: zitadel
+          database: zitadel
+          database_user: zitadel_user
+        - name: commerce
+          database: commerce
+          database_user: commerce_user

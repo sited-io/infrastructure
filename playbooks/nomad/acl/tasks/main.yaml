@@ -41,7 +41,7 @@
       failed_when: enable_kv2_out.rc != 0 and 'path is already in use' not in enable_kv2_out.stderr
 
     - name: Manually initialize ACL on nomad server
-      pause:
+      ansible.builtin.pause:
         prompt: Login to one nomad server and run 'nomad acl bootstrap' save SecretID to 'kv/root/nomad/bootstrap_token' 'token=****'
 
     - name: Get nomad bootstrap token from vault

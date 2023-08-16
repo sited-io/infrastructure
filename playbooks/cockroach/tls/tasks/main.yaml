@@ -1,6 +1,7 @@
 ---
 # @meta description: >
 # Requires [Vault](../../vault/) to be run
+# Requires Cockroach installed on local machine
 #
 # - Create Cockroach SSL certificates and save to Vault
 # - Install and configure [consul-template](https://github.com/hashicorp/consul-template) to update ssl configuration when certificates change
@@ -37,25 +38,6 @@
         path: /tmp/cockroach/tls/certs
         state: directory
 
-    - name: Get Cockroach binary
-      ansible.builtin.unarchive:
-        src: "{{ cockroach.binary_url }}"
-        dest: "/tmp/cockroach/tls"
-        remote_src: true
-
-    - name: Find Cockroach binary
-      ansible.builtin.find:
-        paths: "/tmp/cockroach/tls"
-        patterns: "cockroach"
-        recurse: true
-      register: find_bin_out
-
-    - name: Copy Cockroach executable to working directory
-      ansible.builtin.copy:
-        src: "{{ find_bin_out.files[0].path }}"
-        dest: /tmp/cockroach/tls
-        mode: "777"
-
     - name: Ensure kv secret engine is enabled on vault
       ansible.builtin.command: |
         vault secrets enable -path=kv kv
@@ -70,7 +52,7 @@
 
     - name: Create cockroach CA certificate
       ansible.builtin.command: |
-        /tmp/cockroach/tls/cockroach cert create-ca \
+        cockroach cert create-ca \
           --certs-dir=/tmp/cockroach/tls/certs \
           --ca-key=/tmp/cockroach/tls/certs/ca.key
       when: get_ca_out.rc != 0
@@ -119,7 +101,7 @@
 
     - name: Create root client certificate
       ansible.builtin.command: |
-        /tmp/cockroach/tls/cockroach cert create-client \
+        cockroach cert create-client \
           --certs-dir=/tmp/cockroach/tls/certs \
           --ca-key=/tmp/cockroach/tls/certs/ca.key \
           root

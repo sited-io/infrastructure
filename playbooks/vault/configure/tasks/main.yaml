@@ -115,5 +115,5 @@
 # save token as "initial_root_token"
 
 - name: Manually initialize vault if not initialized yet
-  pause:
+  ansible.builtin.pause:
     prompt: Login to one vault server and run the init comman. Save restore keys to HCPVS.

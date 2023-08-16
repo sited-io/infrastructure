@@ -15,7 +15,7 @@
 # @todo automation: Create consul intention for  zitadel-init -> cockroach-sql zitadel-setup -> cockroach-sql, zitadel-gateway -> zitadel and zitadel -> cockroach-sql 
 
 - name: Ensure zitadel master key on Vault
-  pause:
+  ansible.builtin.pause:
     prompt: Save 32 bit master key to 'kv/zitadel/master_key' 'key=****', 'kv/zitadel/smtp' 'username=***' 'password=***' and 'kv/zitadel/users/admin' 'username=***' 'password=***'
 
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml

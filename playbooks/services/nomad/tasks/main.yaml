@@ -1,0 +1,43 @@
+---
+# @meta description: >
+# Requires all core infrastructure components to be deployed and configured
+#
+# - Create Nomad policy to allow deploying jobs
+# @end
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+    NOMAD_ADDR: "{{ nomad.url }}"
+  block:
+    - name: Ensure working directory exists
+      ansible.builtin.file:
+        path: /tmp/services/nomad/
+        state: directory
+
+    - name: Copy nomad ACL policy for services-deployer to working directory
+      ansible.builtin.copy:
+        src: services-deployer.policy.hcl
+        dest: /tmp/nomad/acl/services-deployer.policy.hcl
+
+    - name: Get Nomad management token from Vault
+      ansible.builtin.command: >-
+        vault read -field secret_id
+          nomad/creds/global_management_role
+      register: management_token_out
+
+    - name: Create services-deployer role on nomad
+      ansible.builtin.command: >-
+        nomad acl policy apply
+          -token {{ management_token_out.stdout }}
+          -description "Nomad ACL policy for services deployments"
+          services-deployer
+          /tmp/nomad/acl/services-deployer.policy.hcl
+
+    - name: Create services-deployer role on vault
+      ansible.builtin.command: >-
+        vault write nomad/role/services-deployer \
+          policies=services-deployer

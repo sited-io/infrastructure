@@ -64,7 +64,7 @@
       failed_when: enable_kv2_out.rc != 0 and 'path is already in use' not in enable_kv2_out.stderr
 
     - name: Manually initialize ACL on consul server
-      pause:
+      ansible.builtin.pause:
         prompt: Login to one consul server and run 'consul acl bootstrap' save SecretID to 'kv/root/consul/bootstrap_token' 'token=****'
 
     - name: Get consul bootstrap token from vault

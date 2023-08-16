@@ -1,0 +1,12 @@
+---
+- import_playbook: vault.yaml
+  tags:
+    - vault
+
+- import_playbook: nomad.yaml
+  tags:
+    - nomad
+
+- import_playbook: cockroach.yaml
+  tags:
+    - cockroach
