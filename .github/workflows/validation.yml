@@ -4,16 +4,21 @@ on:
   push:
 
 jobs:
-  Validation:
+  Linting:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Run kics scan
-      uses: checkmarx/kics-github-action@v1.7.0
-      with:
-        path: ./
-        output_path: kics-results/
-        fail_on: high,medium
-        type: Ansible
     - name: Run ansible-lint
       uses: ansible/ansible-lint-action@main
+  Security:
+    runs-on: ubuntu-late
+    steps:                                 
+    - uses: actions/checkout@v3                                    
+    - name: Run kics scan                                                  
+      uses: checkmarx/kics-github-action@v1.7.0                               
+      with:                                          
+        path: ./                                        
+        output_path: kics-results/                               
+        fail_on: high,medium                                              
+        type: Ansible                         
+
