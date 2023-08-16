@@ -15,7 +15,5 @@ jobs:
         output_path: kics-results/
         fail_on: high,medium
         type: Ansible
-    - name: Display results
-      run: cat kicsk-results/results.json
     - name: Run ansible-lint
       uses: ansible/ansible-lint-action@main
