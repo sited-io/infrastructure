@@ -22,6 +22,8 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
+      - name: Ensure results dir
+        run: mkdir -p kics-results/
       - name: Run kics scan
         uses: checkmarx/kics-github-action@v1.7.0
         with:
