@@ -1,0 +1,27 @@
+name: Ensure as less missconfigurations as possible
+
+on:
+  push:
+    branches:
+      - 'dev'
+      - 'prod'
+jobs:
+  Linting:
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v3
+    - name: Run ansible-lint
+      uses: ansible-community/ansible-lint-action@v6.0.2
+      with:
+        args: "ansible"
+  Security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Run kics scan
+      uses: checkmarx/kics-github-action@v1.7.0
+      with:
+        path: ./
+        output_path: kics-results/
+        fail_on: high,medium
+        type: Ansible
