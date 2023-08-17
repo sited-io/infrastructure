@@ -11,9 +11,12 @@ all:
             - CREATEDB
             - CREATEROLE
             - CREATELOGIN
+          use_ingress_gateway: false
         - name: zitadel
           database: zitadel
           database_user: zitadel_user
+          use_ingress_gateway: false
         - name: commerce
           database: commerce
           database_user: commerce_user
+          use_ingress_gateway: true

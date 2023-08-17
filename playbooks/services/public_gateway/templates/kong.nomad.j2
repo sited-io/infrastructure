@@ -1,0 +1,104 @@
+job "services-grpc-proxy" {
+  datacenters = ["{{ data_center }}"]
+  type = "service"
+
+  group "services-grpc-proxy" {
+    count = 3
+
+    network {
+      mode = "bridge"
+
+      port "http" {}
+      port "admin" {}
+    }
+
+    service {
+      name = "services-grpc-proxy"
+      port = "http"
+
+      connect {
+        sidecar_service {
+          proxy {
+            config {
+              protocol = "http2"
+            }
+{% for service in services.services %}{% if service.use_ingress_gateway %}
+            upstreams {
+              destination_name = "{{ service.name }}-api"
+              local_bind_port = "2000{{ loop.index }}"
+            }
+{% endif %}{% endfor %}
+          }
+        }
+      }
+    }
+
+    task "services-grpc-proxy" {
+      driver = "docker"
+
+      vault {
+        policies = ["services-grpc-proxy"]
+      }
+
+      template {
+        destination = "${NOMAD_SECRETS_DIR}/kong.yaml"
+        env = false
+        change_mode = "restart"
+        left_delimiter = "[["
+        right_delimiter = "]]"
+        data  = <<EOF
+_format_version: "3.0"
+services:
+{% for service in services.services %}{% if service.use_ingress_gateway %}
+  - protocol: grpc
+    host: [[ env "NOMAD_UPSTREAM_IP_{{ service.name }}-api" ]]
+    port: [[ env "NOMAD_UPSTREAM_PORT_{{ service.name }}-api" ]]
+    routes:
+      - protocols:
+          - http
+        paths:
+          - /
+{% endif %}{% endfor %}
+plugins:
+  - name: grpc-web
+  - name: cors
+    config:
+      credentials: false
+      preflight_continue: false
+      origins: ["*"]
+      headers:
+        - "*"
+        - Authorization
+      methods:
+        - POST
+      exposed_headers:
+        - "grpc-message"
+        - "grpc-status"
+EOF
+      }
+
+      template {
+        destination = "${NOMAD_TASK_DIR}/.env"
+        env = true
+        change_mode = "restart"
+        left_delimiter = "[["
+        right_delimiter = "]]"
+        data = <<EOF
+KONG_DATABASE=off
+KONG_LOG_LEVEL=info
+KONG_DECLARATIVE_CONFIG=[[ env "NOMAD_SECRETS_DIR" ]]/kong.yaml
+KONG_PROXY_ACCESS_LOG=/dev/stdout
+KONG_ADMIN_ACCESS_LOG=/dev/stdout
+KONG_PROXY_ERROR_LOG=/dev/stdout
+KONG_ADMIN_ERROR_LOG=/dev/stdout
+KONG_PROXY_LISTEN=0.0.0.0:[[ env "NOMAD_PORT_http" ]]
+KONG_ADMIN_LISTEN=0.0.0.0:[[ env "NOMAD_PORT_admin" ]]
+EOF
+      }
+
+      config {
+        image = "docker.io/kong"
+      }
+    }
+  }
+}

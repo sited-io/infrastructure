@@ -1,0 +1,26 @@
+upstream services_gateway_backends {
+[[- if (service "services-grpc-proxy") -]]
+[[ range service "services-grpc-proxy" ]]
+  server [[ .Address ]]:[[ .Port ]];
+[[- end -]]
+[[- else -]]
+  server 127.0.0.2:80;
+[[- end ]]
+}
+
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  http2 on;
+
+  server_name {{ api_url }};
+
+  ssl_certificate {{ public_gateway.config_dir }}/origin.pem;
+  ssl_certificate_key {{ public_gateway.config_dir }}/origin.key;
+
+  location / {
+    proxy_pass http://services_gateway_backends;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}

@@ -10,3 +10,7 @@
 - import_playbook: cockroach.yaml
   tags:
     - cockroach
+
+- import_playbook: public_gateway.yaml
+  tags:
+    - public_gateway

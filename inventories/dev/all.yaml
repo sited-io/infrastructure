@@ -5,6 +5,7 @@ all:
 
     current_environment: dev
     domain: dev.peoplesmarkets.com
+    api_url: api-dev.peoplesmarkets.com
     data_center: dc1
     graphana_log_url: logs-prod-008.grafana.net
     localhost_ip: "127.0.0.1"

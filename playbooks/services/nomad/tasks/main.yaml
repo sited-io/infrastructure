@@ -23,7 +23,7 @@
     - name: Copy nomad ACL policy for services-deployer to working directory
       ansible.builtin.copy:
         src: services-deployer.policy.hcl
-        dest: /tmp/nomad/acl/services-deployer.policy.hcl
+        dest: /tmp/services/nomad/services-deployer.policy.hcl
 
     - name: Get Nomad management token from Vault
       ansible.builtin.command: >-
@@ -37,7 +37,7 @@
           -token {{ management_token_out.stdout }}
           -description "Nomad ACL policy for services deployments"
           services-deployer
-          /tmp/nomad/acl/services-deployer.policy.hcl
+          /tmp/services/nomad/services-deployer.policy.hcl
 
     - name: Create services-deployer role on vault
       ansible.builtin.command: >-

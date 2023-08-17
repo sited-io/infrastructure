@@ -1,0 +1,48 @@
+---
+# @meta description: >
+# Requires all core infrastructure components to be deployed and configured
+#
+# - Deploy Kong as ingress gateway in Nomad
+# - Configure Nginx on public facing Proxy
+# @end
+
+- ansible.builtin.import_tasks: ../../common-tasks/nomad_login/nomad_login.yaml
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  environment:
+    NOMAD_ADDR: "{{ nomad.url }}"
+    NOMAD_TOKEN: "{{ nomad_token }}"
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/services/kong
+        state: directory
+
+    - name: Copy kong job file to working directory
+      ansible.builtin.template:
+        src: kong.nomad.j2
+        dest: /tmp/services/kong/kong.nomad
+
+    - name: Deploy kong to Nomad
+      ansible.builtin.command: >-
+        nomad job run /tmp/services/kong/kong.nomad
+
+- name: Copy services gateway nginx config template
+  ansible.builtin.template:
+    src: services_gateway.conf.tpl.j2
+    dest: "{{ consul_template.data_dir }}/services_gateway.conf.tpl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted
+
+- name: Copy services gateway consul-template config
+  ansible.builtin.template:
+    src: services_gateway_conf_ctmpl.hcl.j2
+    dest: "{{ consul_template.config_dir }}/services_gateway_conf_ctmpl.hcl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted
