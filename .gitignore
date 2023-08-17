@@ -4,4 +4,3 @@ provisioning/*/*
 !provisioning/*/main.tf
 !provisioning/*/variables.tf
 !provisioning/*/terraform.tfvars
-results.json
