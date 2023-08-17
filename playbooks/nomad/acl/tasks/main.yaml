@@ -57,10 +57,15 @@
       failed_when: enable_nomad_out.rc != 0 and 'already in use' not in enable_nomad_out.stderr
 
     - name: Configure nomad secret engine
-      ansible.builtin.command: |
-        vault write nomad/config/access \
-          address={{ nomad.url }} \
+      ansible.builtin.command: >-
+        vault write nomad/config/access
+          address={{ nomad.url }}
           token={{ bootstrap_token_out.stdout }}
+
+    - name: Configure lease TTLs
+      ansible.builtin.command: >-
+        vault write nomad/config/lease 
+          ttl=2h max_ttl=1d
 
     - name: Create management role
       ansible.builtin.command: |

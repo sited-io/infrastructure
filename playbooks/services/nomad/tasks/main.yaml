@@ -5,6 +5,8 @@
 # - Create Nomad policy to allow deploying jobs
 # @end
 
+- ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
+
 - run_once: true
   delegate_to: localhost
   become: false

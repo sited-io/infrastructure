@@ -4,11 +4,13 @@ job "cockroach-gateway" {
   type = "service"
 
   group "cockroach-gateway" {
+    count = 2
+
     network {
       mode = "bridge"
 
       port "sql" {
-        to = {{ cockroach.ports.sql }}
+        to     = {{ cockroach.ports.sql }}
         static = {{ cockroach.ports.external_sql }}
       }
     }
@@ -23,8 +25,9 @@ job "cockroach-gateway" {
 
           ingress {
             listener {
-              port = {{ cockroach.ports.sql }}
+              port     = {{ cockroach.ports.sql }}
               protocol = "tcp"
+
               service {
                 name = "cockroach-sql"
               }
@@ -34,8 +37,8 @@ job "cockroach-gateway" {
       }
 
       check {
-        type = "tcp"
-        port = "sql"
+        type     = "tcp"
+        port     = "sql"
         interval = "10s"
         timeout  = "1s"
       }
