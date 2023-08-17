@@ -31,3 +31,5 @@ jobs:
           output_path: kics-results/
           fail_on: high,medium
           type: Ansible
+      - name: Remove results directory
+        run: rm -rf kics-results/
