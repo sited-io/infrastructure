@@ -1,4 +1,4 @@
-path "kv/consul/config/encryption" {
+path "kv2/data/consul/config/encryption" {
     capabilities = ["read"]
 }
 

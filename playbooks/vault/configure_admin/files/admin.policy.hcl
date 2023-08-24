@@ -47,6 +47,11 @@ path "kv/*" {
   capabilities = ["create", "read", "update", "delete", "list", "sudo"]
 }
 
+# List, create, update and delete key/value secrets
+path "kv2/*" {
+  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+}
+
 # List, create, update and delete root pki secrets
 path "pki/*" {
   capabilities = ["create", "read", "update", "delete", "list", "sudo"]

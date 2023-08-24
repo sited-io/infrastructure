@@ -21,6 +21,7 @@ all:
 
     consul_template:
       data_dir: /var/lib/consul-template
+      token_dir: /var/lib/consul-template/tokens
       config_dir: /etc/consul-template
 
     envconsul:

@@ -24,9 +24,9 @@
         path: /tmp/consul/gossip
         state: directory
 
-    - name: Ensure vault kv is enabled
+    - name: Ensure vault kv2 is enabled
       ansible.builtin.command: |
-        vault secrets enable kv
+        vault secrets enable -version 2 -path kv2 kv
       register: enable_kv2_out
       failed_when: enable_kv2_out.rc != 0 and 'path is already in use' not in enable_kv2_out.stderr
 
@@ -39,7 +39,7 @@
 
     - name: Save gossip key to vault
       ansible.builtin.command: |
-        vault write kv/consul/config/encryption \
+        vault kv put -mount=kv2 /consul/config/encryption \
           key={{ gossip_key }}
 
     - name: Copy renew-consul-gossip policy to working directory
@@ -59,14 +59,20 @@
           -period=24h
       register: vault_token_out
 
-- ansible.builtin.set_fact:
-    vault_token: "{{ vault_token_out.stdout }}"
-
 - name: Ensure jq is installed
   ansible.builtin.apt:
     name: jq
     state: latest
     update_cache: true
+
+- name: Copy Vault token to token directory
+  ansible.builtin.copy:
+    content: "{{ vault_token_out.stdout }}"
+    dest: "{{ consul_template.token_dir }}/vault/.consul_gossip"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted
 
 - name: Copy gossip key consul template config
   ansible.builtin.template:

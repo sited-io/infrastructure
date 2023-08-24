@@ -12,3 +12,14 @@
     group: root
     mode: "644"
   notify: Systemd Resolved Restarted
+
+- name: Link systemd-resolved resolv.cont to /etc/resolv.conf
+  ansible.builtin.file:
+    src: /run/systemd/resolve/stub-resolv.conf
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    state: link
+    force: true
+    mode: "777"
+  notify: Systemd Resolved Restarted
