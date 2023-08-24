@@ -1,4 +1,4 @@
 vault {
   enabled     = true
-  address     = "{{ vault.url }}"
+  address     = "https://{{ vault.consul_dns_domain }}:{{ vault.ports.https }}"
 }

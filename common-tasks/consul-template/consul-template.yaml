@@ -18,7 +18,6 @@
     - "{{ consul_template.data_dir }}"
     - "{{ consul_template.config_dir }}"
     - "{{ consul_template.token_dir }}/vault"
-    - "{{ consul_template.token_dir }}/consul"
 
 - name: Copy consul-template service
   ansible.builtin.template:

@@ -156,8 +156,14 @@
           -period=24h
       register: vault_token_out
 
-- ansible.builtin.set_fact:
-    vault_token: "{{ vault_token_out.stdout }}"
+- name: Copy Vault token to token directory
+  ansible.builtin.copy:
+    content: "{{ vault_token_out.stdout }}"
+    dest: "{{ consul_template.token_dir }}/vault/.nomad_agent_tls"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted
 
 - name: Copy CA template
   ansible.builtin.template:

@@ -57,13 +57,25 @@
           -period=24h
       register: client_vault_token_out
 
-- when: inventory_hostname in groups.nomad_servers
-  set_fact:
-    vault_token: "{{ server_vault_token_out.stdout }}"
+- name: Copy Vault token to token directory
+  ansible.builtin.copy:
+    content: "{{ server_vault_token_out.stdout }}"
+    dest: "{{ consul_template.token_dir }}/vault/.nomad_consul_creds"
+    owner: root
+    group: root
+    mode: "440"
+  when: inventory_hostname in groups.nomad_servers
+  notify: consul-template unit Restarted
 
-- when: inventory_hostname in groups.nomad_clients
-  set_fact:
-    vault_token: "{{ client_vault_token_out.stdout }}"
+- name: Copy Vault token to token directory
+  ansible.builtin.copy:
+    content: "{{ client_vault_token_out.stdout }}"
+    dest: "{{ consul_template.token_dir }}/vault/.nomad_consul_creds"
+    owner: root
+    group: root
+    mode: "440"
+  when: inventory_hostname in groups.nomad_clients
+  notify: consul-template unit Restarted
 
 - name: Copy server consul config template
   ansible.builtin.template:

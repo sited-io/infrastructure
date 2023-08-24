@@ -59,7 +59,7 @@
     - name: Configure nomad secret engine
       ansible.builtin.command: >-
         vault write nomad/config/access
-          address={{ nomad.url }}
+          address={{ nomad.consul_dns_domain }}
           token={{ bootstrap_token_out.stdout }}
 
     - name: Configure lease TTLs
