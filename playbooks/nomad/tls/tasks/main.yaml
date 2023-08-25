@@ -134,7 +134,7 @@
     - name: Create vault role
       ansible.builtin.command: |
         vault write pki-int/nomad/roles/nomad-{{ data_center }} \
-          allowed_domains="{{ data_center }}.nomad" \
+          allowed_domains="{{ data_center }}.nomad,service.consul" \
           allow_subdomains=true \
           generate_lease=true \
           max_ttl="720h"
@@ -156,49 +156,85 @@
           -period=24h
       register: vault_token_out
 
-- name: Copy Vault token to token directory
-  ansible.builtin.copy:
-    content: "{{ vault_token_out.stdout }}"
-    dest: "{{ consul_template.token_dir }}/vault/.nomad_agent_tls"
-    owner: root
-    group: root
-    mode: "440"
-  notify: consul-template unit Restarted
+- when: inventory_hostname in groups.nomad
+  block:
+    - name: Copy Vault token to token directory
+      ansible.builtin.copy:
+        content: "{{ vault_token_out.stdout }}"
+        dest: "{{ consul_template.token_dir }}/vault/.nomad_agent_tls"
+        owner: root
+        group: root
+        mode: "440"
+      notify: consul-template unit Restarted
 
-- name: Copy CA template
-  ansible.builtin.template:
-    src: nomad-agent-ca.pem.tpl.j2
-    dest: "{{ consul_template.data_dir }}/nomad-agent-ca.pem.tpl"
+    - ansible.builtin.set_fact:
+        common_name: "server.{{ data_center }}.nomad"
+        alt_names: nomad.service.consul
+      when: inventory_hostname in groups.nomad_servers
+    - ansible.builtin.set_fact:
+        common_name: "client.{{ data_center }}.nomad"
+        alt_names: nomad-client.service.consul
+      when: inventory_hostname in groups.nomad_clients
 
-- name: Copy server certificate template
-  ansible.builtin.template:
-    src: nomad-agent-cert.pem.tpl.j2
-    dest: "{{ consul_template.data_dir }}/nomad-agent-cert.pem.tpl"
+    - name: Copy CA template
+      ansible.builtin.template:
+        src: nomad-agent-ca.pem.tpl.j2
+        dest: "{{ consul_template.data_dir }}/nomad-agent-ca.pem.tpl"
+      notify: consul-template unit Restarted
 
-- name: Copy server certificate key template
-  ansible.builtin.template:
-    src: nomad-agent-key.pem.tpl.j2
-    dest: "{{ consul_template.data_dir }}/nomad-agent-key.pem.tpl"
+    - name: Copy server certificate template
+      ansible.builtin.template:
+        src: nomad-agent-cert.pem.tpl.j2
+        dest: "{{ consul_template.data_dir }}/nomad-agent-cert.pem.tpl"
+      notify: consul-template unit Restarted
 
-- name: Ensure tls directory
-  ansible.builtin.file:
-    path: "/opt/nomad/tls"
-    state: directory
+    - name: Copy server certificate key template
+      ansible.builtin.template:
+        src: nomad-agent-key.pem.tpl.j2
+        dest: "{{ consul_template.data_dir }}/nomad-agent-key.pem.tpl"
+      notify: consul-template unit Restarted
 
-- name: Copy nomad agent consul-template config file
-  ansible.builtin.template:
-    src: nomad_agent_tls_ctmpl.hcl.j2
-    dest: "{{ consul_template.config_dir }}/nomad_agent_tls_ctmpl.hcl"
-    owner: root
-    group: root
-    mode: "440"
-  notify: consul-template unit Restarted
+    - name: Ensure tls directory
+      ansible.builtin.file:
+        path: "/opt/nomad/tls"
+        state: directory
 
-- name: Copy nomad tls configurations
-  ansible.builtin.template:
-    src: agent.tls.hcl.j2
-    dest: "{{ nomad.config_dir }}/agent.tls.hcl"
-    owner: nomad
-    group: nomad
-    mode: 0664
-  notify: Nomad Restarted
+    - name: Copy nomad agent consul-template config file
+      ansible.builtin.template:
+        src: nomad_agent_tls_ctmpl.hcl.j2
+        dest: "{{ consul_template.config_dir }}/nomad_agent_tls_ctmpl.hcl"
+        owner: root
+        group: root
+        mode: "440"
+      notify: consul-template unit Restarted
+
+    - name: Copy nomad tls configurations
+      ansible.builtin.template:
+        src: agent.tls.hcl.j2
+        dest: "{{ nomad.config_dir }}/agent.tls.hcl"
+        owner: nomad
+        group: nomad
+        mode: 0664
+      notify: Nomad Restarted
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/nomad/tls/nomad
+        state: directory
+
+    - name: Get nomad SSL CA
+      ansible.builtin.get_url:
+        url: "{{ vault.url }}/v1/pki-int/nomad/ca/pem"
+        dest: "/tmp/nomad/tls/nomad/nomad-ca.pem"
+
+    - name: Configure nomad secret engine with nomad CA
+      ansible.builtin.command: >-
+        vault write nomad/config/access
+          ca_cert=@/tmp/nomad/tls/nomad/nomad-ca.pem
