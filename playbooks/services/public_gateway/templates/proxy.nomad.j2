@@ -1,0 +1,89 @@
+job "services-grpc-web-proxy" {
+  datacenters = ["{{ data_center }}"]
+  type = "system"
+
+  group "services-grpc-web-proxy" {
+    network {
+      mode = "bridge"
+
+      port "http" {}
+    }
+
+    service {
+      name = "services-grpc-web-proxy"
+      port = "http"
+
+      connect {
+        sidecar_service {
+          proxy {
+{% for service in gateway_services %}
+            upstreams {
+              destination_name = "{{ service.name }}-api"
+              local_bind_port = "1000{{ loop.index }}"
+            }
+{% endfor %}
+          }
+        }
+      }
+    }
+
+    task "services-grpc-web-proxy" {
+      driver = "docker"
+
+      vault {
+        policies = ["services-grpc-web-proxy"]
+      }
+
+      template {
+        destination = "local/load-balancer.conf"
+        change_mode = "restart"
+        left_delimiter = "[["
+        right_delimiter = "]]"
+        data  = <<EOF
+{% for service in gateway_services %}
+upstream {{ service.name }}_backends {
+  server [[ env "NOMAD_UPSTREAM_ADDR_{{ service.name }}-api" ]];
+}
+{% endfor %}
+
+server {
+  listen *:[[ env "NOMAD_PORT_http" ]] default_server;
+  listen [::]:[[ env "NOMAD_PORT_http" ]] default_server;
+
+  client_max_body_size 8M;
+
+  proxy_set_header Host $host;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+  location /health {
+    return 200;
+  }
+{% for service in gateway_services %}
+{% for grpc_service in service.grpc_services %}
+
+  location /{{ grpc_service }} {
+    proxy_pass http://{{ service.name }}_backends;
+  }
+{% endfor %}
+{% endfor %}
+}
+EOF
+      }
+
+      config {
+        image = "docker.io/nginx"
+
+        volumes = [
+          "local:/etc/nginx/conf.d"
+        ]
+      }
+
+      check {
+        type     = "grpc"
+        port     = "http"
+        interval = "20s"
+        timeout  = "2s"
+      }
+    }
+  }
+}

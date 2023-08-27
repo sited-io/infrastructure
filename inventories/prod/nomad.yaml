@@ -4,6 +4,7 @@ all:
     nomad:
       ui_host: nomad.peoplesmarkets.com
       url: https://nomad.peoplesmarkets.com
+      consul_dns_domain: nomad.service.consul
       data_dir: /var/lib/nomad
       config_dir: /etc/nomad.d
       certs_dir: /etc/nomad.d/certs

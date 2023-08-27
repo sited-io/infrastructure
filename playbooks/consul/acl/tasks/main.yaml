@@ -4,45 +4,48 @@
 #
 # - Manually bootstrap ACL after configuration and save bootstrap token to Vault
 # - Enable [consul secret engine](https://developer.hashicorp.com/vault/docs/secrets/consul) on Vault
+# - Register Vault to Consul
 # - Create and configure Consul server and agent roles
 # @end
 
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
 
-- name: Ensure consul config directory
-  ansible.builtin.file:
-    path: "{{ consul.config_dir }}"
-    state: directory
-    owner: consul
-    group: consul
-    mode: 0775
+- when: inventory_hostname in groups.consul
+  block:
+    - name: Ensure consul config directory
+      ansible.builtin.file:
+        path: "{{ consul.config_dir }}"
+        state: directory
+        owner: consul
+        group: consul
+        mode: 0775
 
-- name: Copy server ACL configuration
-  ansible.builtin.template:
-    src: server.acl.hcl.j2
-    dest: "{{ consul.config_dir }}/server.acl.hcl"
-    owner: consul
-    group: consul
-    mode: 0664
-  register: copy_server_acl_config_out
-  when: inventory_hostname in groups.consul_servers
+    - name: Copy server ACL configuration
+      ansible.builtin.template:
+        src: server.acl.hcl.j2
+        dest: "{{ consul.config_dir }}/server.acl.hcl"
+        owner: consul
+        group: consul
+        mode: 0664
+      register: copy_server_acl_config_out
+      when: inventory_hostname in groups.consul_servers
 
-- name: Copy client ACL configuration
-  ansible.builtin.template:
-    src: client.acl.hcl.j2
-    dest: "{{ consul.config_dir }}/client.acl.hcl"
-    owner: consul
-    group: consul
-    mode: 0664
-  register: copy_client_acl_config_out
-  when: inventory_hostname in groups.consul_clients
+    - name: Copy client ACL configuration
+      ansible.builtin.template:
+        src: client.acl.hcl.j2
+        dest: "{{ consul.config_dir }}/client.acl.hcl"
+        owner: consul
+        group: consul
+        mode: 0664
+      register: copy_client_acl_config_out
+      when: inventory_hostname in groups.consul_clients
 
-- name: Restart consul service
-  throttle: 2
-  ansible.builtin.service:
-    name: consul
-    state: restarted
-  when: copy_server_acl_config_out.changed or copy_client_acl_config_out.changed
+    - name: Restart consul service
+      throttle: 2
+      ansible.builtin.service:
+        name: consul
+        state: restarted
+      when: copy_server_acl_config_out.changed or copy_client_acl_config_out.changed
 
 - name: Wait
   ansible.builtin.pause:
@@ -113,6 +116,17 @@
         - consul_default_dns
         - nomad_server
         - nomad_client
+        - vault_register
+
+- name: Copy consul service registration config to Vault
+  ansible.builtin.template:
+    src: vault_consul.hcl.j2
+    dest: "{{ vault.config_dir }}/consul.hcl"
+    owner: vault
+    group: vault
+    mode: "664"
+  when: inventory_hostname in groups.vault
+  notify: Vault Restarted
 
 - name: Set default dns token
   ansible.builtin.command: |
@@ -120,6 +134,7 @@
       -token "{{ management_token }}" \
       -http-addr "{{ ansible_eth1.ipv4.address }}:{{ consul.ports.http }}" \
       default "{{ consul_default_dns_token }}"
+  when: inventory_hostname in groups.consul
 
 - name: Set consul server token
   ansible.builtin.command: |

@@ -11,8 +11,15 @@
     state: latest
     update_cache: true
 
+- name: Configure vault service to use whole config directory
+  ansible.builtin.lineinfile:
+    path: /lib/systemd/system/vault.service
+    regexp: "^ExecStart=.*$"
+    line: "ExecStart=/usr/bin/vault server -config=/etc/vault.d/"
+
 - name: Ensure vault service is enabled
   ansible.builtin.service:
     name: vault
     state: started
     enabled: true
+    daemon_reload: true

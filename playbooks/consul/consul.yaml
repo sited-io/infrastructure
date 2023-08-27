@@ -14,6 +14,11 @@
   tags:
     - acl
 
+- name: Configure Consul as DNS server
+  import_playbook: dns.yaml
+  tags:
+    - dns
+
 - name: Configure gossip encryption
   import_playbook: gossip.yaml
   tags:
@@ -23,8 +28,3 @@
   import_playbook: tls.yaml
   tags:
     - tls
-
-- name: Configure Consul as DNS server
-  import_playbook: dns.yaml
-  tags:
-    - dns

@@ -1,13 +1,12 @@
 vault {
-  address      = "{{ vault.url }}"
+  address      = "https://{{ vault.consul_dns_domain }}:{{ vault.ports.https }}"
   unwrap_token = false
   renew_token  = true
-
-  token = "{{ vault_token }}"
+  vault_agent_token_file = "{{ consul_template.token_dir }}/vault/.cockroach_cluster"
 
   ssl {
     enabled = true
-    verify  = true
+    verify  = false
   }
 }
 

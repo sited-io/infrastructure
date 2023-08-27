@@ -4,6 +4,7 @@ all:
     vault:
       ui_host: vault.peoplesmarkets.com
       url: https://vault.peoplesmarkets.com
+      consul_dns_domain: active.vault.service.consul
       config_dir: /etc/vault.d
       certs_dir: /opt/vault/tls
       data_dir: /opt/vault/data
