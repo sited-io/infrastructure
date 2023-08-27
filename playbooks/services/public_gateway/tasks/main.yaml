@@ -7,6 +7,7 @@
 # @end
 
 - ansible.builtin.import_tasks: ../../common-tasks/nomad_login/nomad_login.yaml
+- ansible.builtin.import_tasks: ../../common-tasks/consul_login/consul_login.yaml
 
 - run_once: true
   delegate_to: localhost
@@ -14,20 +15,36 @@
   environment:
     NOMAD_ADDR: "{{ nomad.url }}"
     NOMAD_TOKEN: "{{ nomad_token }}"
+    CONSUL_HTTP_ADDR: "{{ consul.url }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_token }}"
   block:
     - name: Ensure working directory
       ansible.builtin.file:
-        path: /tmp/services/kong
+        path: /tmp/services/public_gateway/intentions
         state: directory
 
-    - name: Copy kong job file to working directory
-      ansible.builtin.template:
-        src: kong.nomad.j2
-        dest: /tmp/services/kong/kong.nomad
+    - ansible.builtin.set_fact:
+        gateway_services: "{{ services.services | selectattr('use_ingress_gateway', 'true') }}"
 
-    - name: Deploy kong to Nomad
+    - name: Copy intentions configurations to working directory
+      ansible.builtin.template:
+        src: consul-intention.json.j2
+        dest: /tmp/services/public_gateway/intentions/{{ item.name }}.json
+      with_items: "{{ gateway_services }}"
+
+    - name: Create consul intentions
       ansible.builtin.command: >-
-        nomad job run /tmp/services/kong/kong.nomad
+        consul config write /tmp/services/public_gateway/intentions/{{ item.name }}.json
+      with_items: "{{ gateway_services }}"
+
+    - name: Copy proxy nomad job to working directory
+      ansible.builtin.template:
+        src: proxy.nomad.j2
+        dest: /tmp/services/public_gateway/proxy.nomad
+
+    - name: Deploy proxy to nomad
+      ansible.builtin.command: >-
+        nomad job run /tmp/services/public_gateway/proxy.nomad
 
 - name: Copy services gateway nginx config template
   ansible.builtin.template:
