@@ -77,13 +77,6 @@ EOF
           "local:/etc/nginx/conf.d"
         ]
       }
-
-      check {
-        type     = "grpc"
-        port     = "http"
-        interval = "20s"
-        timeout  = "2s"
-      }
     }
   }
 }
