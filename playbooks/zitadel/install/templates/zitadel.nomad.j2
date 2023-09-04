@@ -7,18 +7,17 @@ job "zitadel" {
 
     network {
       mode = "bridge"
+
+      port "grpc" {}
     }
 
     service {
       name = "zitadel"
-      port = "8080"
+      port = "grpc"
 
       connect {
         sidecar_service {
           proxy {
-            config {
-              protocol = "http2"
-            }
             upstreams {
               destination_name = "cockroach-sql"
               local_bind_port  = {{ cockroach.ports.sql }}
@@ -55,6 +54,7 @@ EOF
 Log:
   Level: 'info'
 
+Port: [[ env "NOMAD_PORT_grpc" ]]
 ExternalSecure: true
 ExternalDomain: {{ zitadel.domain }}
 ExternalPort: 443
@@ -99,46 +99,6 @@ EOF
           "--config",
           "${NOMAD_SECRETS_DIR}/config.yaml",
         ]
-      }
-    }
-  }
-
-  group "zitadel-gateway" {
-    count = 2
-
-    network {
-      mode = "bridge"
-
-      port "http" {
-        to = 8080
-      }
-    }
-
-    service {
-      name = "zitadel-gateway"
-      port = "http"
-
-      connect {
-        gateway {
-          proxy {}
-          ingress {
-            listener {
-              port     = 8080
-              protocol = "tcp"
-              service {
-                name = "zitadel"
-              }
-            }
-          }
-        }
-      }
-
-      check {
-        type     = "http"
-        port     = "http"
-        path     = "/healthz"
-        interval = "20s"
-        timeout  = "2s"
       }
     }
   }

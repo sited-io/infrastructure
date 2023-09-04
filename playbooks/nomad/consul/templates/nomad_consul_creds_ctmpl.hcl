@@ -20,7 +20,7 @@ template {
   perms           = 0440
 
   exec {
-    command = ["systemctl", "reload", "nomad"]
+    command = ["systemctl", "restart", "nomad"]
   }
 }
 

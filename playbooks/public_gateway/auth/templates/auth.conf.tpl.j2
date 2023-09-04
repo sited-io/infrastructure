@@ -1,6 +1,6 @@
 upstream zitadel_backends {
-[[- if (service "zitadel-gateway") -]]
-[[ range service "zitadel-gateway" ]]
+[[- if (service "zitadel") -]]
+[[ range service "zitadel" ]]
   server [[ .Address ]]:[[ .Port ]];
 [[- end -]]
 [[- else -]]

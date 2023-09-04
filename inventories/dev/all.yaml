@@ -31,19 +31,10 @@ all:
     main_website:
       dev_mode: true
       redirect_uris:
-        - https://dev.peoplesmarkets.com/sign-in/callback
-        - http://localhost:8000/sign-in/callback
+        - https://dev.peoplesmarkets.com/user/sign-in/callback
+        - http://localhost:8000/user/sign-in/callback
       post_logout_redirect_uris:
         - https://dev.peoplesmarkets.com
-        - http://localhost:8000
-
-    community_website:
-      dev_mode: true
-      redirect_uris:
-        - https://community-dev.peoplesmarkets.com/sign-in/callback
-        - http://localhost:8000/sign-in/callback
-      post_logout_redirect_uris:
-        - https://community-dev.peoplesmarkets.com
         - http://localhost:8000
 
     branding:
