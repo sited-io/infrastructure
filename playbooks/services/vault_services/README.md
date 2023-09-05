@@ -1,8 +1,8 @@
-# Role - vault
+# Role - vault_services
 
 Requires all core infrastructure components to be deployed and configured
 
-- Create Vault role and user for Nomad deployments and set password in GitHub
+- Create Vault user for each service
 
 ## Table of content
 

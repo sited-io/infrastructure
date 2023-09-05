@@ -1,8 +1,8 @@
-# Role - vault
+# Role - public_proxy
 
 Requires all core infrastructure components to be deployed and configured
 
-- Create Vault role and user for Nomad deployments and set password in GitHub
+- Configure Nginx as public facing proxy for service backends
 
 ## Table of content
 

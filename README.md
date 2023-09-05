@@ -4,13 +4,28 @@
 
 ### Linting & static security analyser
 
-Both the linter and the static security analyser are running on each push on the github actions pipeline.  
+Both the linter and the static security analyser are running on each push on the github actions pipeline.
 
-* As linter [ansible-lint](https://ansible.readthedocs.io/projects/lint/) is used. For installation documentation see [ansible lint installing](https://ansible.readthedocs.io/projects/lint/)
-  * Just run `ansible-lint`
+- As linter [ansible-lint](https://ansible.readthedocs.io/projects/lint/) is used. For installation documentation see [ansible lint installing](https://ansible.readthedocs.io/projects/lint/)
 
-* To check if there are any passwords, tokens... hardcoded, [kics](https://kics.io/index.html) is used to ensure a secure IaC repository.  
-  * Run it locally `docker run -t -v $PWD:/path checkmarx/kics:latest scan -p /path -o "/path/"`
+  - Just run `ansible-lint`
+
+- To check if there are any passwords, tokens... hardcoded, [kics](https://kics.io/index.html) is used to ensure a secure IaC repository.
+  - Run it locally `docker run -t -v $PWD:/path checkmarx/kics:latest scan -p /path -o "/path/"`
+
+### Documentation
+
+Requires `ansible-doctor`
+
+```sh
+ansible-doctor --recursive <playbook_path>
+```
+
+Generate docs for all playbooks:
+
+```sh
+ls -d playbooks/* | xargs -I {} bash -c "ansible-doctor --recursive -f {}"
+```
 
 ## [Provisioning](./provisioning/)
 

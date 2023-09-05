@@ -15,6 +15,7 @@ Requires SMTP credentials and 32 bit master_key to be saved to Vault
 ## Table of content
 
 - [Requirements](#requirements)
+- [Open Tasks](#open-tasks)
 - [Dependencies](#dependencies)
 - [License](#license)
 - [Author](#author)
@@ -27,6 +28,9 @@ None.
 
 
 
+## Open Tasks
+
+- (automation): Create consul intention for zitadel-init -> cockroach-sql zitadel-setup -> cockroach-sql, zitadel-gateway -> zitadel and zitadel -> cockroach-sql
 
 ## Dependencies
 

@@ -8,6 +8,7 @@ Requires service user set up in Zitadel and client_secret saved to Vault
 ## Table of content
 
 - [Requirements](#requirements)
+- [Open Tasks](#open-tasks)
 - [Dependencies](#dependencies)
 - [License](#license)
 - [Author](#author)
@@ -20,6 +21,9 @@ None.
 
 
 
+## Open Tasks
+
+- (automation): Configure links to privacy-policy and terms-of-service
 
 ## Dependencies
 
