@@ -1,0 +1,50 @@
+---
+# @meta description: >
+# Requires all core infrastructure components to be deployed and configured
+#
+# - Configure default intentions for services
+# @end
+
+- ansible.builtin.import_tasks: ../../common-tasks/consul_login/consul_login.yaml
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  environment:
+    CONSUL_HTTP_ADDR: "{{ consul.url }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_token }}"
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/services/consul_services
+        state: directory
+
+    - ansible.builtin.set_fact:
+        gateway_services: "{{ services.services | selectattr('use_ingress_gateway', 'true') }}"
+
+    - name: Copy zitadel intentions configurations to working directory
+      ansible.builtin.copy:
+        src: zitadel_intention.json
+        dest: /tmp/services/consul_services/zitadel_intention.json
+
+    - name: Create consul intentions for zitadel
+      ansible.builtin.command: >-
+        consul config write /tmp/services/consul_services/zitadel_intention.json
+
+    - name: Copy cockroach intentions configurations to working directory
+      ansible.builtin.copy:
+        src: cockroach_intention.json
+        dest: /tmp/services/consul_services/cockroach_intention.json
+
+    - name: Create consul intentions for cockroach
+      ansible.builtin.command: >-
+        consul config write /tmp/services/consul_services/cockroach_intention.json
+
+    - name: Copy commerce intentions configurations to working directory
+      ansible.builtin.copy:
+        src: commerce_intention.json
+        dest: /tmp/services/consul_services/commerce_intention.json
+
+    - name: Create consul intentions for commerce
+      ansible.builtin.command: >-
+        consul config write /tmp/services/consul_services/commerce_intention.json

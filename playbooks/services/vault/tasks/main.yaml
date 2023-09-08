@@ -3,7 +3,6 @@
 # Requires all core infrastructure components to be deployed and configured
 #
 # - Create Vault role and user for Nomad deployments and set password in GitHub
-# - Create Vault user for each service
 # @end
 
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
@@ -41,15 +40,3 @@
 
     - ansible.builtin.pause:
         prompt: Save {{ services_deployer_password }} to GitHub organization secrets as '{{ services.github_service_deployer_password_key }}'
-
-    - name: Copy service roles to working directory
-      ansible.builtin.template:
-        src: service.policy.hcl.j2
-        dest: /tmp/services/vault/service-{{ item.name }}.hcl
-      with_items: "{{ services.services }}"
-
-    - name: Create service roles on vault
-      ansible.builtin.command: >-
-        vault policy write service-{{ item.name }}
-          /tmp/services/vault/service-{{ item.name }}.hcl
-      with_items: "{{ services.services }}"

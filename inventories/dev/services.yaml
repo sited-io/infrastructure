@@ -23,3 +23,9 @@ all:
           grpc_services:
             - "peoplesmarkets.commerce.v1.OfferService"
             - "peoplesmarkets.commerce.v1.MarketBoothService"
+        - name: payment
+          database: payment
+          database_user: payment_user
+          use_ingress_gateway: true
+          grpc_services:
+            - "peoplesmarkets.payment.v1.StripeService"

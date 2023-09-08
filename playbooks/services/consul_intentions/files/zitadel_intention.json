@@ -1,0 +1,14 @@
+{
+  "Kind": "service-intentions",
+  "Name": "zitadel",
+  "Sources": [
+    {
+      "Action": "allow",
+      "Name": "commerce-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "payment-api"
+    }
+  ]
+}

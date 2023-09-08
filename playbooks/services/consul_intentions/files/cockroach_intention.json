@@ -1,0 +1,30 @@
+{
+  "Kind": "service-intentions",
+  "Name": "cockroach-sql",
+  "Sources": [
+    {
+      "Action": "allow",
+      "Name": "cockroach-sql-gateway"
+    },
+    {
+      "Action": "allow",
+      "Name": "zitadel"
+    },
+    {
+      "Action": "allow",
+      "Name": "zitadel-init"
+    },
+    {
+      "Action": "allow",
+      "Name": "zitadel-setup"
+    },
+    {
+      "Action": "allow",
+      "Name": "commerce-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "payment-api"
+    }
+  ]
+}

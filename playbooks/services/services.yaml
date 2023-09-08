@@ -3,6 +3,11 @@
   tags:
     - vault
 
+- import_playbook: vault_services.yaml
+  tags:
+    - vault_services
+    - add
+
 - import_playbook: nomad.yaml
   tags:
     - nomad
@@ -10,7 +15,14 @@
 - import_playbook: cockroach.yaml
   tags:
     - cockroach
+    - add
 
 - import_playbook: public_gateway.yaml
   tags:
     - public_gateway
+    - add
+
+- import_playbook: consul_intentions.yaml
+  tags:
+    - consul_intentions
+    - add

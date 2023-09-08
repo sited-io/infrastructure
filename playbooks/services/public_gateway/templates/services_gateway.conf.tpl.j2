@@ -31,3 +31,26 @@ server {
 {% endfor %}
 {% endfor %}
 }
+
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  http2 on;
+
+  server_name {{ grpc_url }};
+
+  ssl_certificate {{ public_gateway.config_dir }}/origin.pem;
+  ssl_certificate_key {{ public_gateway.config_dir }}/origin.key;
+
+  grpc_set_header Host $host;
+  grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+{% for service in gateway_services %}
+{% for grpc_service in service.grpc_services %}
+
+  location /{{ grpc_service }} {
+    grpc_pass grpc://{{ service.name }}_backends;
+  }
+{% endfor %}
+{% endfor %}
+}
