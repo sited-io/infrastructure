@@ -29,4 +29,12 @@ all:
           use_ingress_gateway: true
           grpc_services:
             - "peoplesmarkets.payment.v1.StripeService"
+        - name: media
+          database: media
+          database_user: media_user
+          use_ingress_gateway: true
+          proxy_extra_configurations:
+            - "client_max_body_size 64M;"
+          grpc_services:
+            - "peoplesmarkets.media.v1.MediaService"
 
