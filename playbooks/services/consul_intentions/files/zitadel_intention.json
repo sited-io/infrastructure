@@ -9,6 +9,10 @@
     {
       "Action": "allow",
       "Name": "payment-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "media-api"
     }
   ]
 }

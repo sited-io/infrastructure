@@ -26,6 +26,11 @@ server {
 {% for grpc_service in service.grpc_services %}
 
   location /{{ grpc_service }} {
+{% if 'proxy_extra_configurations' in service %}
+{% for extra_configuration in service.proxy_extra_configurations %}
+    {{ extra_configuration }}
+{% endfor %}
+{% endif %}
     proxy_pass http://{{ service.name }}_backends;
   }
 {% endfor %}
@@ -49,6 +54,11 @@ server {
 {% for grpc_service in service.grpc_services %}
 
   location /{{ grpc_service }} {
+{% if 'proxy_extra_configurations' in service %}
+{% for extra_configuration in service.proxy_extra_configurations %}
+    {{ extra_configuration }}
+{% endfor %}
+{% endif %}
     grpc_pass grpc://{{ service.name }}_backends;
   }
 {% endfor %}
