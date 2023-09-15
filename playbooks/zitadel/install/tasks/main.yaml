@@ -12,25 +12,30 @@
 # - Deploy setup job to nomad
 # - Deploy start job to nomad
 # @end
-# @todo automation: Create consul intention for  zitadel-init -> cockroach-sql zitadel-setup -> cockroach-sql, zitadel-gateway -> zitadel and zitadel -> cockroach-sql 
+# @todo automation: Create consul intention for  zitadel-init -> cockroach-sql zitadel-setup -> cockroach-sql, zitadel-gateway -> zitadel and zitadel -> cockroach-sql
 
 - name: Ensure zitadel master key on Vault
   ansible.builtin.pause:
     prompt: Save 32 bit master key to 'kv/zitadel/master_key' 'key=****', 'kv/zitadel/smtp' 'username=***' 'password=***' and 'kv/zitadel/users/admin' 'username=***' 'password=***'
+  tags: always
 
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
+  tags: always
 
 - ansible.builtin.import_tasks: ../../common-tasks/nomad_login/nomad_login.yaml
+  tags: always
 
 - name: Ensure working directory
   ansible.builtin.file:
     path: /tmp/zitade/install
     state: directory
+  tags: always
 
 - name: Copy zitade vault role to working directory
   ansible.builtin.copy:
     src: zitadel.policy.hcl
     dest: /tmp/zitade/install/zitadel.policy.hcl
+  tags: always
 
 - name: Ensure zitadel policy on vault
   environment:
@@ -39,11 +44,13 @@
   ansible.builtin.command: |
     vault policy write zitadel \
       /tmp/zitade/install/zitadel.policy.hcl
+  tags: always
 
 - name: Prepare init job file
   ansible.builtin.template:
     src: zitadel.init.nomad.j2
     dest: /tmp/zitade/install/zitadel.init.nomad
+  tags: init
 
 - name: Deploy init job
   ansible.builtin.command: |
@@ -51,6 +58,7 @@
       -address={{ nomad.url }} \
       -token={{ nomad_token }} \
       /tmp/zitade/install/zitadel.init.nomad
+  tags: init
 
 - name: Wait for init job finished
   ansible.builtin.shell: |
@@ -64,11 +72,15 @@
   until: init_job_status_out.stdout == 'dead'
   delay: 10
   retries: 10
+  tags: init
 
 - name: Prepare setup job file
   ansible.builtin.template:
     src: zitadel.setup.nomad.j2
     dest: /tmp/zitade/install/zitadel.setup.nomad
+  tags:
+    - init
+    - setup
 
 - name: Deploy setup job
   ansible.builtin.command: |
@@ -76,6 +88,9 @@
       -address={{ nomad.url }} \
       -token={{ nomad_token }} \
       /tmp/zitade/install/zitadel.setup.nomad
+  tags:
+    - init
+    - setup
 
 - name: Wait for setup job finished
   ansible.builtin.shell: |
@@ -89,11 +104,15 @@
   until: setup_job_status_out.stdout == 'dead'
   delay: 10
   retries: 20
+  tags:
+    - init
+    - setup
 
 - name: Prepare start job file
   ansible.builtin.template:
     src: zitadel.nomad.j2
     dest: /tmp/zitade/install/zitadel.nomad
+  tags: start
 
 - name: Deploy start job
   ansible.builtin.command: |
@@ -101,6 +120,7 @@
       -address={{ nomad.url }} \
       -token={{ nomad_token }} \
       /tmp/zitade/install/zitadel.nomad
+  tags: start
 
 # Users -> Service Users -> New
 # User Name = service

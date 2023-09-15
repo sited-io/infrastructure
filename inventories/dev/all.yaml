@@ -40,11 +40,11 @@ all:
 
     branding:
       colors:
-        primary: "#1a73e8"
-        warn: "#ff3b5b"
+        primary: "#141414"
+        warn: "#e60025"
         background: "#f8f8f8"
         font: "#303134"
-        primaryDark: "#8ab4f8"
+        primaryDark: "#f8f9fa"
         warnDark: "#ff3b5b"
         backgroundDark: "#1e1e1e"
         fontDark: "#e8eaed"
