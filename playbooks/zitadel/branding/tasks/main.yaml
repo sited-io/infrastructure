@@ -69,6 +69,7 @@
     body_format: json
     body: "{{ labeling_branding }}"
     status_code:
+      - 200
       - 201
       - 409
 
