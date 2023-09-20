@@ -7,13 +7,12 @@ all:
       bin_dir: /usr/local/bin
       lib_dir: /usr/local/lib/cockroach
       certs_dir: /usr/local/lib/cockroach/certs
-      binary_url: https://binaries.cockroachdb.com/cockroach-v23.1.6.linux-amd64.tgz
+      binary_url: https://binaries.cockroachdb.com/cockroach-v23.1.10.linux-amd64.tgz
       ports:
         listen: 26257
         http: 8080
         sql: 5432
         external_sql: 5433
-
   children:
     cockroach:
       hosts:

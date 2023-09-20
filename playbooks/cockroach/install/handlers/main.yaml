@@ -1,6 +1,6 @@
 ---
 - name: Cockroach Restarted
-  throttle: 1
+  throttle: 2
   ansible.builtin.service:
     name: cockroach
     state: restarted

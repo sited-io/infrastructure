@@ -29,6 +29,10 @@
     {
       "Action": "allow",
       "Name": "media-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "stripe-webhooks-api"
     }
   ]
 }

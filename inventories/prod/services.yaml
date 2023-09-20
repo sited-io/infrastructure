@@ -37,4 +37,10 @@ all:
             - "client_max_body_size 64M;"
           grpc_services:
             - "peoplesmarkets.media.v1.MediaService"
+        - name: stripe-webhooks
+          database: stripe_webhooks
+          database_user: stripe_webhooks_user
+          use_ingress_gateway: true
+          http_services:
+            - "stripe-webhooks/"
 

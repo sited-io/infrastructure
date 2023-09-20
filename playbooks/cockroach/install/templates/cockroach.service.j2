@@ -18,6 +18,8 @@ TimeoutStopSec=300
 Restart=always
 RestartSec=10
 User=cockroach
+LimitCORE=infinity
+CPUQuota=100%
 
 [Install]
 WantedBy=default.target

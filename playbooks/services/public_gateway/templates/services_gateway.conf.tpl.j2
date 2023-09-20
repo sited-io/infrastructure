@@ -4,7 +4,7 @@ upstream {{ service.name }}_backends {
 [[ range service "{{ service.name }}-api" ]]
   server [[ .Address ]]:[[ .Port ]];
 [[- end -]]
-[[- else -]]
+[[ else ]]
   server 127.0.0.2:80;
 [[- end ]]
 }
@@ -23,6 +23,7 @@ server {
   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
 {% for service in gateway_services %}
+{% if 'grpc_services' in service %}
 {% for grpc_service in service.grpc_services %}
 
   location /{{ grpc_service }} {
@@ -34,6 +35,21 @@ server {
     proxy_pass http://{{ service.name }}_backends;
   }
 {% endfor %}
+{% endif %}
+
+{% if 'http_services' in service %}
+{% for http_service in service.http_services %}
+
+  location /{{ http_service }} {
+{% if 'proxy_extra_configurations' in service %}
+{% for extra_configuration in service.proxy_extra_configurations %}
+    {{ extra_configuration }}
+{% endfor %}
+{% endif %}
+    proxy_pass http://{{ service.name }}_backends/;
+  }
+{% endfor %}
+{% endif %}
 {% endfor %}
 }
 
@@ -51,6 +67,7 @@ server {
   grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
 {% for service in gateway_services %}
+{% if 'grpc_services' in service %}
 {% for grpc_service in service.grpc_services %}
 
   location /{{ grpc_service }} {
@@ -62,5 +79,6 @@ server {
     grpc_pass grpc://{{ service.name }}_backends;
   }
 {% endfor %}
+{% endif %}
 {% endfor %}
 }

@@ -48,3 +48,12 @@
     - name: Create consul intentions for commerce
       ansible.builtin.command: >-
         consul config write /tmp/services/consul_services/commerce_intention.json
+
+    - name: Copy media intentions configurations to working directory
+      ansible.builtin.copy:
+        src: media_intention.json
+        dest: /tmp/services/consul_services/media_intention.json
+
+    - name: Create consul intentions for media
+      ansible.builtin.command: >-
+        consul config write /tmp/services/consul_services/media_intention.json

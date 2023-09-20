@@ -9,7 +9,6 @@
 # - Install and configure [envoy](https://www.envoyproxy.io/docs) to run as sidecar proxy for cockroach services
 # - Deploy ingress gateway for cockroach sql service to nomad
 # @end
-# @todo automation: Create consul intention for  cockroach-sql-gateway -> cockroach-sql
 
 - ansible.builtin.import_tasks: ../../common-tasks/envoy/envoy.yaml
 
