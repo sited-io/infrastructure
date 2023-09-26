@@ -3,7 +3,9 @@ all:
   vars:
     services:
       github_service_deployer_password_key: PROD_SERVICE_DEPLOYER_PASSWORD
-      services:
+      frontend:
+        main: main-website
+      backend:
         - name: zitadel
           database: zitadel
           database_user: zitadel_admin
@@ -23,6 +25,8 @@ all:
           grpc_services:
             - "peoplesmarkets.commerce.v1.OfferService"
             - "peoplesmarkets.commerce.v1.MarketBoothService"
+            - "peoplesmarkets.commerce.v1.ShopCustomizationService"
+            - "peoplesmarkets.commerce.v1.ShopDomainService"
         - name: payment
           database: payment
           database_user: payment_user
@@ -43,4 +47,3 @@ all:
           use_ingress_gateway: true
           http_services:
             - "stripe-webhooks/"
-

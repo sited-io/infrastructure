@@ -23,10 +23,10 @@
       ansible.builtin.template:
         src: service.policy.hcl.j2
         dest: /tmp/services/vault_serivces/service-{{ item.name }}.hcl
-      with_items: "{{ services.services }}"
+      with_items: "{{ services.backend }}"
 
     - name: Create service roles on vault
       ansible.builtin.command: >-
         vault policy write service-{{ item.name }}
           /tmp/services/vault_serivces/service-{{ item.name }}.hcl
-      with_items: "{{ services.services }}"
+      with_items: "{{ services.backend }}"

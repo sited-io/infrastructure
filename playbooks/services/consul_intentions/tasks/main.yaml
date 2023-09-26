@@ -20,7 +20,7 @@
         state: directory
 
     - ansible.builtin.set_fact:
-        gateway_services: "{{ services.services | selectattr('use_ingress_gateway', 'true') }}"
+        gateway_services: "{{ services.backend | selectattr('use_ingress_gateway', 'true') }}"
 
     - name: Copy zitadel intentions configurations to working directory
       ansible.builtin.copy:

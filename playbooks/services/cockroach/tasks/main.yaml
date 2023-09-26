@@ -20,7 +20,7 @@
         state: directory
 
     - ansible.builtin.set_fact:
-        allowed_roles: "{{ services.services | map(attribute='database_user') | join(',') }}"
+        allowed_roles: "{{ services.backend | map(attribute='database_user') | join(',') }}"
 
     - name: Configure cockroach database secret engine with allowed roles
       ansible.builtin.command: >-
@@ -45,7 +45,7 @@
           --execute 'ALTER USER {{ item.database_user }} WITH {{ role }};'
           {% endfor %}{% endif %}
           --execute 'GRANT ALL ON DATABASE {{ item.database }} TO {{ item.database_user }} WITH GRANT OPTION;'
-      with_items: "{{ services.services }}"
+      with_items: "{{ services.backend }}"
 
     - name: Copy rotation statement to working directory
       ansible.builtin.copy:
@@ -59,4 +59,4 @@
           rotation_statement=@/tmp/services/cockroach/rotation.sql
           username="{{ item.database_user }}"
           rotation_period=86400
-      with_items: "{{ services.services }}"
+      with_items: "{{ services.backend }}"

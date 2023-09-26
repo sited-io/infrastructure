@@ -1,0 +1,41 @@
+upstream {{ services.frontend.main }}_backends {
+[[- if (service "{{ services.frontend.main }}") -]]
+[[ range service "{{ services.frontend.main }}" ]]
+  server [[ .Address ]]:[[ .Port ]];
+[[- end -]]
+[[ else ]]
+  server 127.0.0.2:80;
+[[- end ]]
+}
+
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+
+  server_name {{ frontend_url }};
+
+  ssl_certificate {{ public_gateway.config_dir }}/origin.pem;
+  ssl_certificate_key {{ public_gateway.config_dir }}/origin.key;
+
+  proxy_set_header Host $host;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+  location / {
+    proxy_pass http://{{ services.frontend.main }}_backends;
+  }
+}
+
+server {
+  listen 443 ssl default_server;
+  listen [::]:443 ssl default_server;
+
+    ssl_certificate {{ public_gateway.config_dir }}/origin.pem;
+  ssl_certificate_key {{ public_gateway.config_dir }}/origin.key;
+
+  proxy_set_header Host $host;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+  location / {
+    proxy_pass http://{{ services.frontend.main }}_backends;
+  }
+}

@@ -4,6 +4,7 @@
 #
 # - Configure Nginx as public facing proxy for service backends
 # @end
+
 - ansible.builtin.import_tasks: ../../common-tasks/ufw/ufw.yaml
 
 - name: Configure firewall allow http 443
@@ -13,12 +14,22 @@
     proto: tcp
 
 - ansible.builtin.set_fact:
-    gateway_services: "{{ services.services | selectattr('use_ingress_gateway', 'true') }}"
+    gateway_services: "{{ services.backend | selectattr('use_ingress_gateway', 'true') }}"
+    frontend_services: "{{ services.frontend }}"
 
 - name: Copy services gateway nginx config template
   ansible.builtin.template:
     src: services_gateway.conf.tpl.j2
     dest: "{{ consul_template.data_dir }}/services_gateway.conf.tpl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: consul-template unit Restarted
+
+- name: Copy fronted gateway nginx config template
+  ansible.builtin.template:
+    src: frontend_gateway_conf.tpl.j2
+    dest: "{{ consul_template.data_dir }}/frontend_gateway.conf.tpl"
     owner: root
     group: root
     mode: "440"
@@ -32,3 +43,7 @@
     group: root
     mode: "440"
   notify: consul-template unit Restarted
+
+- ansible.builtin.file:
+    path: /etc/nginx/conf.d/frontend_gateway_conf
+    state: absent
