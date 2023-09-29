@@ -24,7 +24,7 @@ all:
           use_ingress_gateway: true
           grpc_services:
             - "peoplesmarkets.commerce.v1.OfferService"
-            - "peoplesmarkets.commerce.v1.MarketBoothService"
+            - "peoplesmarkets.commerce.v1.ShopService"
             - "peoplesmarkets.commerce.v1.ShopCustomizationService"
             - "peoplesmarkets.commerce.v1.ShopDomainService"
         - name: payment
