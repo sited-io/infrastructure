@@ -1,5 +1,5 @@
 vault {
-  address      = "https://{{ vault.consul_dns_domain }}:{{ vault.ports.https }}"
+  address      = "http://{{ localhost_ip }}:{{ vault.ports.https }}"
   unwrap_token = false
   renew_token  = true
   vault_agent_token_file = "{{ consul_template.token_dir }}/vault/.consul_agent_tls"

@@ -57,3 +57,12 @@
     - name: Create consul intentions for media
       ansible.builtin.command: >-
         consul config write /tmp/services/consul_services/media_intention.json
+
+    - name: Copy payment intentions configurations to working directory
+      ansible.builtin.copy:
+        src: payment_intention.json
+        dest: /tmp/services/consul_services/payment_intention.json
+
+    - name: Create consul intentions for payment
+      ansible.builtin.command: >-
+        consul config write /tmp/services/consul_services/payment_intention.json

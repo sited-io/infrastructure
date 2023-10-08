@@ -27,6 +27,7 @@ all:
             - "peoplesmarkets.commerce.v1.ShopService"
             - "peoplesmarkets.commerce.v1.ShopCustomizationService"
             - "peoplesmarkets.commerce.v1.ShopDomainService"
+            - "peoplesmarkets.commerce.v1.ShippingRateService"
         - name: payment
           database: payment
           database_user: payment_user
@@ -41,6 +42,7 @@ all:
             - "client_max_body_size 64M;"
           grpc_services:
             - "peoplesmarkets.media.v1.MediaService"
+            - "peoplesmarkets.media.v1.MediaSubscriptionService"
         - name: stripe-webhooks
           database: stripe_webhooks
           database_user: stripe_webhooks_user
