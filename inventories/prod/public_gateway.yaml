@@ -6,6 +6,10 @@ all:
       sites_dir: /etc/nginx/conf.d
       nginx_package_url: https://nginx.org/download/{{ nginx_version }}.tar.gz
       health_url: "health.{{ domain }}"
+      origin_certificate: "origin_certificate"
+      origin_certificate_key: "origin_certificate_key"
+      custom_origin_certificate: "origin_certificate"
+      custom_origin_certificate_key: "origin_certificate_key"
 
   children:
     public_gateway:
