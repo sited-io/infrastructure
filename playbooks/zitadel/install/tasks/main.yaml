@@ -71,7 +71,7 @@
   register: init_job_status_out
   until: init_job_status_out.stdout == 'dead'
   delay: 10
-  retries: 10
+  retries: 20
   tags: init
 
 - name: Prepare setup job file
