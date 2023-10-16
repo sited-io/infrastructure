@@ -1,1 +1,1 @@
-[[ with secret "kv2/consul/config/encryption" ]][[ .Data.data.key ]][[ end ]]
+[[ with secret "kv2/data/consul/config/encryption" ]][[ .Data.data.key ]][[ end ]]

@@ -18,20 +18,9 @@
     VAULT_ADDR: "{{ vault_addr }}"
     VAULT_TOKEN: "{{ vault_token }}"
   block:
-    - name: Gather facts from nomad clients
-      ansible.builtin.setup:
-      delegate_to: "{{ item }}"
-      delegate_facts: true
-      loop: "{{ groups.nomad_clients }}"
-
-    - name: Ensure working directory clean
-      ansible.builtin.file:
-        path: /tmp/cockroach/tls
-        state: absent
-
     - name: Ensure working directory
       ansible.builtin.file:
-        path: /tmp/cockroach/tls/certs
+        path: /tmp/cockroach/tls
         state: directory
 
     - name: Ensure cockroach pki secret engine enabled on vault
@@ -127,9 +116,6 @@
         -period=24h
       register: vault_token_out
 
-- ansible.builtin.set_fact:
-    node_name: "{{ inventory_hostname.split('.')[0] }}"
-
 - name: Copy Vault token to token directory
   ansible.builtin.copy:
     content: "{{ vault_token_out.stdout }}"
@@ -198,7 +184,7 @@
     mode: "440"
   notify: consul-template unit Restarted
 
-- name: Copy cockroach tls consul-template config file
+- name: Copy cockroach nodes tls consul-template config file
   ansible.builtin.template:
     src: cockroach_cluster_ctmpl.hcl.j2
     dest: "{{ consul_template.config_dir }}/cockroach_cluster_ctmpl.hcl"

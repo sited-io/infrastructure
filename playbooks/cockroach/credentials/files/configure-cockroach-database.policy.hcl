@@ -2,7 +2,7 @@ path "auth/token/renew-self" {
   capabilities = ["create", "read", "update"]
 }
 
-path "kv/cockroach/clients/global_management" {
+path "kv2/data/cockroach/clients/global_management" {
   capabilities = ["read"]
 }
 

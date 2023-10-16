@@ -54,3 +54,33 @@ template {
     command = ["systemctl", "restart", "cockroach"]
   }
 }
+
+template {
+  source          = "{{ consul_template.data_dir }}/client.root.crt.tpl"
+  destination     = "{{ cockroach.certs_dir }}/client.root.crt"
+  left_delimiter  = "[["
+  right_delimiter = "]]"
+
+  user  = "cockroach"
+  group = "cockroach"
+  perms = 0400
+
+  exec {
+    command = ["systemctl", "restart", "cockroach"]
+  }
+}
+
+template {
+  source          = "{{ consul_template.data_dir }}/client.root.key.tpl"
+  destination     = "{{ cockroach.certs_dir }}/client.root.key"
+  left_delimiter  = "[["
+  right_delimiter = "]]"
+
+  user  = "cockroach"
+  group = "cockroach"
+  perms = 0400
+
+  exec {
+    command = ["systemctl", "restart", "cockroach"]
+  }
+}

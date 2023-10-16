@@ -29,8 +29,8 @@
 
     - name: Get cockroach management password
       ansible.builtin.command: >-
-        vault read -field=password 
-          kv/cockroach/clients/global_management
+        vault kv get -mount=kv2 -field=password \
+          /cockroach/clients/global_management
       register: management_password_out
 
     - name: Create services databases and users

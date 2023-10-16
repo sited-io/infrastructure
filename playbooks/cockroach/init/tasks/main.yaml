@@ -18,14 +18,15 @@
         path: /tmp/cockroach/init
         state: directory
 
-    - name: Get root client certificate and key
+    - name: Ensure vault kv2 is enabled
       ansible.builtin.command: |
-        vault read -format=json kv/cockroach/clients/root
-      register: root_client_certificate_out
+        vault secrets enable -version 2 -path kv2 kv
+      register: enable_kv2_out
+      failed_when: enable_kv2_out.rc != 0 and 'path is already in use' not in enable_kv2_out.stderr
 
     - name: Check global_management password exsits in vault
       ansible.builtin.command: |
-        vault read -field=password kv/cockroach/clients/global_management
+        vault kv get -mount=kv2 -field=password /cockroach/clients/global_management
       register: global_management_password_out
       ignore_errors: true
 
@@ -35,13 +36,13 @@
 
     - name: Save generated password to vault
       ansible.builtin.command: |
-        vault write kv/cockroach/clients/global_management \
+        vault kv put -mount=kv2 /cockroach/clients/global_management \
           password={{ global_management_password }}
       when: global_management_password_out.rc != 0
 
     - name: Get global_management password from vault
       ansible.builtin.command: |
-        vault read -field=password kv/cockroach/clients/global_management
+        vault kv get -mount=kv2 -field=password /cockroach/clients/global_management
       register: global_management_password_out
 
     - ansible.builtin.set_fact:
@@ -50,18 +51,6 @@
 - run_once: true
   delegate_to: "{{ groups.cockroach[0] }}"
   block:
-    - name: Copy certificate to working directory
-      ansible.builtin.copy:
-        content: "{{ root_client_certificate_out.stdout | from_json | json_query('data.certificate') }}"
-        dest: "{{ cockroach.certs_dir }}/client.root.crt"
-        mode: "700"
-
-    - name: Copy certificate to working directory
-      ansible.builtin.copy:
-        content: "{{ root_client_certificate_out.stdout | from_json | json_query('data.key') }}"
-        dest: "{{ cockroach.certs_dir }}/client.root.key"
-        mode: "700"
-
     - name: Initialize cockroach cluster
       ansible.builtin.command: |
         cockroach init \
