@@ -22,6 +22,8 @@ all:
           database: commerce
           database_user: commerce_user
           use_ingress_gateway: true
+          proxy_extra_configurations:
+            - "client_max_body_size 16M;"
           grpc_services:
             - "peoplesmarkets.commerce.v1.OfferService"
             - "peoplesmarkets.commerce.v1.ShopService"
