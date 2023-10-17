@@ -51,3 +51,9 @@ all:
           use_ingress_gateway: true
           http_services:
             - "stripe-webhooks/"
+        - name: report
+          database: report
+          database_user: report_user
+          use_ingress_gateway: true
+          grpc_services:
+            - "peoplesmarkets.report.v1.ReportService"
