@@ -2,7 +2,7 @@
 all:
   vars:
     zitadel:
-      version: "v2.38.1"
+      version: "v2.40.8"
       domain: auth-dev.peoplesmarkets.com
       admin_email: maxiteme@dev.peoplesmarkets.com
       service_user: service

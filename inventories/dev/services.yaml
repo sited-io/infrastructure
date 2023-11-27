@@ -13,10 +13,13 @@ all:
             - CREATEDB
             - CREATEROLE
             - CREATELOGIN
+            - VIEWACTIVITY
           use_ingress_gateway: false
         - name: zitadel
           database: zitadel
           database_user: zitadel_user
+          database_roles:
+            - VIEWACTIVITY
           use_ingress_gateway: false
         - name: commerce
           database: commerce

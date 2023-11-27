@@ -22,7 +22,7 @@
     owner: nomad
     group: nomad
     mode: 0644
-  notify: Nomad Restarted
+  notify: Nomad Reloaded
 
 - name: Copy server config file
   ansible.builtin.template:
