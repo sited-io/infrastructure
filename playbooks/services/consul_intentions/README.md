@@ -1,7 +1,8 @@
-# Role - prepare
+# 
 
-Prepare Vault deployment
-- Create self signed SSL certificate
+Requires all core infrastructure components to be deployed and configured
+
+- Configure default intentions for services
 
 ## Table of content
 

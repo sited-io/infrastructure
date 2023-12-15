@@ -15,6 +15,7 @@ Requires SMTP credentials and 32 bit master_key to be saved to Vault
 ## Table of content
 
 - [Requirements](#requirements)
+- [Discovered Tags](#discovered-tags)
 - [Open Tasks](#open-tasks)
 - [Dependencies](#dependencies)
 - [License](#license)
@@ -27,6 +28,15 @@ Requires SMTP credentials and 32 bit master_key to be saved to Vault
 None.
 
 
+## Discovered Tags
+
+**_always_**
+
+**_init_**
+
+**_setup_**
+
+**_start_**
 
 ## Open Tasks
 

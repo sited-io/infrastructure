@@ -9,7 +9,6 @@ Requires Cockroach installed on local machine
 ## Table of content
 
 - [Requirements](#requirements)
-- [Open Tasks](#open-tasks)
 - [Dependencies](#dependencies)
 - [License](#license)
 - [Author](#author)
@@ -22,9 +21,6 @@ None.
 
 
 
-## Open Tasks
-
-- (automation): Use Vault PKI instead of manually creating self signed SSL certificate
 
 ## Dependencies
 

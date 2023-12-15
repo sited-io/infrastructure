@@ -54,3 +54,19 @@ ls -d playbooks/* | xargs -I {} bash -c "ansible-doctor --recursive -f {}"
 ### Auth
 
 #### [1: Zitadel](./playbooks/zitadel/)
+
+## Secrets
+
+Initial secrects required for deploying vault cluster and public gateway are stored in ansible-vault encrypted yaml files.
+
+Developement environment
+
+```sh
+EDITOR='code --wait' ansible-vault edit --vault-password-file=.dev_ansible_vault_pass vaults/dev.yaml
+```
+
+Production environment
+
+```sh
+EDITOR='code --wait' ansible-vault edit --vault-password-file=.prod_ansible_vault_pass vaults/prod.yaml
+```

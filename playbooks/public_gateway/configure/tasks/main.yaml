@@ -4,49 +4,6 @@
 # - Get [Cloudflare Origin Certificate](https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/)
 # - Copy over nginx configuration for health endpoind and tools UI
 # @end
-- name: Get Cloudflare origin certificate from HCPVS # HCP Vault Secrets
-  run_once: true
-  delegate_to: localhost
-  become: false
-  ansible.builtin.command: |
-    vlt secrets get \
-      -p {{ hcpvs.project_id }} \
-      -a Cloudflare \
-      -plaintext {{ public_gateway.origin_certificate }}
-  register: origin_certificate_out
-
-- name: Get Cloudflare origin certificate key from HCPVS
-  run_once: true
-  delegate_to: localhost
-  become: false
-  ansible.builtin.command: |
-    vlt secrets get \
-      -p {{ hcpvs.project_id }} \
-      -a Cloudflare \
-      -plaintext {{ public_gateway.origin_certificate_key }}
-  register: origin_certificate_key_out
-
-- name: Get Cloudflare origin certificate for custom domain from HCPVS # HCP Vault Secrets
-  run_once: true
-  delegate_to: localhost
-  become: false
-  ansible.builtin.command: |
-    vlt secrets get \
-      -p {{ hcpvs.project_id }} \
-      -a Cloudflare \
-      -plaintext {{ public_gateway.custom_origin_certificate }}
-  register: custom_origin_certificate_out
-
-- name: Get Cloudflare origin certificate key for custom domain from HCPVS
-  run_once: true
-  delegate_to: localhost
-  become: false
-  ansible.builtin.command: |
-    vlt secrets get \
-      -p {{ hcpvs.project_id }} \
-      -a Cloudflare \
-      -plaintext {{ public_gateway.custom_origin_certificate_key }}
-  register: custom_origin_certificate_key_out
 
 - name: Configure nginx
   when: inventory_hostname in groups.public_gateway
@@ -70,7 +27,7 @@
 
     - name: Copy Cloudflare origin ca
       ansible.builtin.copy:
-        content: "{{ origin_certificate_out.stdout.replace('\\n', '\n') }}"
+        content: "{{ public_gateway.origin_certificate }}"
         dest: "{{ public_gateway.config_dir }}/origin.pem"
         owner: root
         group: www-data
@@ -79,7 +36,7 @@
 
     - name: Copy Cloudflare origin ca key
       ansible.builtin.copy:
-        content: "{{ origin_certificate_key_out.stdout.replace('\\n', '\n') }}"
+        content: "{{ public_gateway.origin_certificate_key }}"
         dest: "{{ public_gateway.config_dir }}/origin.key"
         owner: root
         group: www-data
@@ -88,7 +45,7 @@
 
     - name: Copy Cloudflare origin ca for custom domain
       ansible.builtin.copy:
-        content: "{{ custom_origin_certificate_out.stdout.replace('\\n', '\n') }}"
+        content: "{{ public_gateway.custom_origin_certificate }}"
         dest: "{{ public_gateway.config_dir }}/custom_origin.pem"
         owner: root
         group: www-data
@@ -97,7 +54,7 @@
 
     - name: Copy Cloudflare origin ca key for custom domain
       ansible.builtin.copy:
-        content: "{{ custom_origin_certificate_key_out.stdout.replace('\\n', '\n') }}"
+        content: "{{ public_gateway.custom_origin_certificate_key }}"
         dest: "{{ public_gateway.config_dir }}/custom_origin.key"
         owner: root
         group: www-data

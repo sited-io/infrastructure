@@ -3,46 +3,8 @@
 # Requires [provisioning](../../../provisioning/) to be run or KMS keyring to be set up on GCP.
 #
 # Configure Vault
-# - Get self signed SSL Certificate from [HCPVS](https://developer.hashicorp.com/hcp/docs/vault-secrets)
 # - Configure Vault with raft storage and auto unseal using [GCP KMS](https://cloud.google.com/security-key-management)
 # @end
-
-- name: Get certificates
-  run_once: true
-  delegate_to: localhost
-  become: false
-  block:
-    - name: Get root CA certificate from HCPVS # HCP Vault Secrets
-      ansible.builtin.command: |
-        vlt secrets get \
-          -p {{ hcpvs.project_id }} \
-          -a vault \
-          -plaintext ssl_ca_certificate
-      register: ssl_ca_certificate_out
-
-    - name: Get vault certificate key from HCPVS
-      ansible.builtin.command: |
-        vlt secrets get \
-          -p {{ hcpvs.project_id }} \
-          -a vault \
-          -plaintext ssl_certificate_key
-      register: ssl_certificate_key_out
-
-    - name: Get vault certificate from HCPVS
-      ansible.builtin.command: |
-        vlt secrets get \
-          -p {{ hcpvs.project_id }} \
-          -a vault \
-          -plaintext ssl_certificate
-      register: ssl_certificate_out
-
-    - name: Get GCP credentials from HCPVS
-      ansible.builtin.command: |
-        vlt secrets get \
-          -p {{ hcpvs.project_id }} \
-          -a vault \
-          -plaintext gcp_kms_service_account_key
-      register: gcp_kms_service_account_key_out
 
 - name: Ensure vault config dir
   ansible.builtin.file:
@@ -65,7 +27,7 @@
 
 - name: Copy CA certificate
   ansible.builtin.copy:
-    content: "{{ ssl_ca_certificate_out.stdout }}"
+    content: "{{ secrets.vault.ssl_ca_certificate.replace('\\n', '\n') }}"
     dest: "{{ vault.certs_dir }}/ca.crt"
     owner: root
     group: root
@@ -74,7 +36,7 @@
 
 - name: Copy vault certificate
   ansible.builtin.copy:
-    content: "{{ ssl_certificate_key_out.stdout }}"
+    content: "{{ secrets.vault.ssl_certificate_key.replace('\\n', '\n') }}"
     dest: "{{ vault.certs_dir }}/client.key"
     owner: root
     group: root
@@ -83,7 +45,7 @@
 
 - name: Copy vault certificate key
   ansible.builtin.copy:
-    content: "{{ ssl_certificate_out.stdout }}"
+    content: "{{ secrets.vault.ssl_certificate.replace('\\n', '\n') }}"
     dest: "{{ vault.certs_dir }}/client.crt"
     owner: root
     group: vault
@@ -92,7 +54,7 @@
 
 - name: Copy GCP service account credentials
   ansible.builtin.copy:
-    content: "{{ gcp_kms_service_account_key_out.stdout }}"
+    content: "{{ secrets.vault.gcp_kms_service_account_key }}"
     dest: "{{ vault.config_dir }}/gcp_credentials.json"
     owner: root
     group: vault
@@ -116,4 +78,4 @@
 
 - name: Manually initialize vault if not initialized yet
   ansible.builtin.pause:
-    prompt: Login to one vault server and run the init comman. Save restore keys to HCPVS.
+    prompt: Login to one vault server and run the init comman. Save restore keys to secrets file. Save initial root token to 'secrets.vault.initial_root_token'.

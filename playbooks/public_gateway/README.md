@@ -3,7 +3,7 @@
 Developement environment
 
 ```sh
-ansible-playbook -i inventories/dev/ playbooks/public_gateway/public_gateway.yaml
+ansible-playbook -i inventories/dev/ -e @vaults/dev.yaml --vault-password-file=.dev_ansible_vault_pass playbooks/public_gateway/public_gateway.yaml
 ```
 
 Production environment

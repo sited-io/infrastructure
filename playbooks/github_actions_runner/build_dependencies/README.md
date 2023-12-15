@@ -1,7 +1,4 @@
-# Role - prepare
-
-Prepare Vault deployment
-- Create self signed SSL certificate
+# 
 
 ## Table of content
 

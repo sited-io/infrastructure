@@ -2,7 +2,6 @@
 # @meta description: >
 # Requires [Grafana Cloud](https://grafana.com/products/cloud/)
 #
-# - Get Grafana service user credentials from [HCPVS](https://developer.hashicorp.com/hcp/docs/vault-secrets)
 # - Run [Vector](https://github.com/vectordotdev/vector) nomad job
 # @end
 
@@ -13,16 +12,8 @@
     path: /tmp/vector/install
     state: directory
 
-- name: Get log_shipper_api_key from HCPVS # HCP Vault Secrets
-  ansible.builtin.command: |
-    vlt secrets get \
-      -p {{ hcpvs.project_id }} \
-      -a Grafana \
-      -plaintext log_shipper_api_key
-  register: log_shipper_api_key_out
-
 - ansible.builtin.set_fact:
-    log_shipper_api_key: "{{ log_shipper_api_key_out.stdout }}"
+    log_shipper_api_key: "{{ secrets.grafana.log_shipper_api_key }}"
 
 - name: Prepare vector job file
   ansible.builtin.template:

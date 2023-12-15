@@ -1,21 +1,12 @@
 ---
 # @meta description: >
 # Configure Vault admin role
-# - Get root token from [HCPVS](https://developer.hashicorp.com/hcp/docs/vault-secrets)
-# - Configure Vault admin role and save password to [HCPVS](https://developer.hashicorp.com/hcp/docs/vault-secrets)
+# - Configure Vault admin role
 # @end
-
-- name: Get initial_root_token from HCPVS
-  ansible.builtin.command: |
-    vlt secrets get \
-      -p {{ hcpvs.project_id }} \
-      -a vault \
-      -plaintext initial_root_token
-  register: initial_root_token_out
 
 - environment:
     VAULT_ADDR: "https://{{ vault.ui_host }}"
-    VAULT_TOKEN: "{{ initial_root_token_out.stdout }}"
+    VAULT_TOKEN: "{{ secrets.vault.initial_root_token }}"
   block:
     - name: Ensure working directory
       ansible.builtin.file:
@@ -46,19 +37,9 @@
           policies=admin
       register: create_admin_out
 
-    - name: Save admin password to HCPVS # HCP Vault Secrets
-      ansible.builtin.command: |
-        vlt secrets create \
-          -p {{ hcpvs.project_id }} \
-          -a vault \
-          admin_password="{{ admin_password }}"
-      register: save_admin_password_out
-      failed_when: save_admin_password_out.rc != 0 and 'already exists' not in save_admin_password_out.stdout
-
-    - name: Update admin password on HCPVS
-      ansible.builtin.command: |
-        vlt secrets update \
-          -p {{ hcpvs.project_id }} \
-          -a vault \
-          admin_password="{{ admin_password }}"
-      when: save_admin_password_out.rc == 1 and 'already exists' in save_admin_password_out.stdout
+    - name: Manually add vault admin password to secrets file.
+      ansible.builtin.pause:
+        prompt: |
+          secrets:
+            vault:
+              admin_password: '{{ admin_password }}'

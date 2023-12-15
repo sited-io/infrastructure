@@ -12,7 +12,6 @@ Requires [Nomad](../../nomad/) to be run
 ## Table of content
 
 - [Requirements](#requirements)
-- [Open Tasks](#open-tasks)
 - [Dependencies](#dependencies)
 - [License](#license)
 - [Author](#author)
@@ -25,9 +24,6 @@ None.
 
 
 
-## Open Tasks
-
-- (automation): Create consul intention for cockroach-sql-gateway -> cockroach-sql
 
 ## Dependencies
 
