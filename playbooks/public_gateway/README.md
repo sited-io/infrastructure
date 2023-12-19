@@ -9,7 +9,7 @@ ansible-playbook -i inventories/dev/ -e @vaults/dev.yaml --vault-password-file=.
 Production environment
 
 ```sh
-ansible-playbook -i inventories/prod/ playbooks/public_gateway/public_gateway.yaml
+ansible-playbook -i inventories/prod/ -e @vaults/prod.yaml --vault-password-file=.prod_ansible_vault_pass playbooks/public_gateway/public_gateway.yaml
 ```
 
 ## Roles
@@ -20,16 +20,16 @@ ansible-playbook -i inventories/prod/ playbooks/public_gateway/public_gateway.ya
 
 ### [3: Configure](./configure/)
 
-### [4: Auth](./auth/)
+### [4: Auth](./auth/) Requires ZITADEL to be deployed
 
 Developement environment
 
 ```sh
-ansible-playbook -i inventories/dev/ playbooks/public_gateway/auth.yaml
+ansible-playbook -i inventories/dev/ -e @vaults/dev.yaml --vault-password-file=.dev_ansible_vault_pass playbooks/public_gateway/auth.yaml
 ```
 
 Production environment
 
 ```sh
-ansible-playbook -i inventories/prod/ playbooks/public_gateway/auth.yaml
+ansible-playbook -i inventories/prod/ -e @vaults/prod.yaml --vault-password-file=.prod_ansible_vault_pass playbooks/public_gateway/auth.yaml
 ```

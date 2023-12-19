@@ -8,7 +8,7 @@
 - name: Install vault package
   ansible.builtin.apt:
     name: vault
-    state: latest
+    state: present
     update_cache: true
 
 - name: Configure vault service to use whole config directory

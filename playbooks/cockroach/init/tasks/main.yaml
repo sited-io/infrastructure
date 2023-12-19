@@ -6,6 +6,10 @@
 
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
 
+- name: Wait a few seconds in case the play before restarted cockroach service
+  ansible.builtin.pause:
+    seconds: 20
+
 - run_once: true
   delegate_to: localhost
   become: false

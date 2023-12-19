@@ -1,0 +1,2 @@
+- name: Enable network interface
+  ansible.builtin.command: ifup eth1

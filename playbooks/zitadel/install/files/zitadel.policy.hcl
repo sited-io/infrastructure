@@ -6,7 +6,7 @@ path "database/static-creds/zitadel_user" {
   capabilities = ["read"]
 }
 
-path "kv/zitadel/*" {
+path "kv2/data/zitadel/*" {
   capabilities = ["read"]
 }
 

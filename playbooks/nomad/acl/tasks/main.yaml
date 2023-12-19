@@ -24,7 +24,13 @@
     owner: nomad
     group: nomad
     mode: "444"
-  notify: Nomad Reloaded
+  register: acl_config_changed
+
+- name: Restart nomad if acl config changed
+  when: acl_config_changed.changed
+  ansible.builtin.service:
+    name: nomad
+    state: restarted
 
 - run_once: true
   delegate_to: localhost
@@ -36,18 +42,18 @@
   block:
     - name: Ensure kv secret engine is enabled on vault
       ansible.builtin.command: |
-        vault secrets enable -path=kv kv
+        vault secrets enable -version 2 -path kv2 kv
       register: enable_kv2_out
       failed_when: enable_kv2_out.rc != 0 and 'path is already in use' not in enable_kv2_out.stderr
 
     - name: Manually initialize ACL on nomad server
       ansible.builtin.pause:
-        prompt: Login to one nomad server and run 'nomad acl bootstrap' save SecretID to 'kv/root/nomad/bootstrap_token'
+        prompt: Login to one nomad server and run 'nomad acl bootstrap' save SecretID as 'token' to '/root/nomad/bootstrap_token'
 
     - name: Get nomad bootstrap token from vault
       ansible.builtin.command: |
-        vault read -field=token \
-          kv/root/nomad/bootstrap_token
+        vault kv get -mount=kv2 -field=token \
+          /root/nomad/bootstrap_token
       register: bootstrap_token_out
 
     - name: Enable nomad secret engine on vault

@@ -3,6 +3,7 @@
 # Role to initially configure host systems
 # - Update apt packages
 # - Set hostname
+# - Set up private network interfaces
 # - Use ntp for clock synchronization from [CockroachDB docs](https://www.cockroachlabs.com/docs/stable/deploy-cockroachdb-on-premises#step-1-synchronize-clocks)
 # - Install and configure UFW firewall and allow internal network
 # @end
@@ -23,6 +24,12 @@
   ansible.builtin.template:
     src: hosts.j2
     dest: /etc/hosts
+
+- name: Configure private network interface
+  ansible.builtin.template:
+    src: 60-private-network.cfg.j2
+    dest: /etc/network/interfaces.d/60-private-network.cfg
+  notify: Enable network interface
 
 - name: Install locales-all
   ansible.builtin.apt:
@@ -82,11 +89,30 @@
     rule: allow
     src: "{{ private_network_range }}"
 
+- name: Install systemd-resolved
+  ansible.builtin.apt:
+    name: systemd-resolved
+    state: latest
+
+- name: Use Cloudflare for public DNS
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^\s*DNS=.*$'
+    # line: "#DNS=1.1.1.1"
+    state: absent
+
 - name: Disable LLMNR for systemd-resolved
   ansible.builtin.lineinfile:
     path: /etc/systemd/resolved.conf
     regexp: '^#\s*LLMNR=.*$'
     line: "LLMNR=no"
+
+- name: Use stub file for systemd-resolved
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^\s*DNSStubListener=.*$'
+    # line: "#DNSStubListener=yes"
+    state: absent
 
 - name: Ensure systemd-resolved restarted
   ansible.builtin.service:

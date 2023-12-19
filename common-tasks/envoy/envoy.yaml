@@ -1,4 +1,9 @@
 ---
+- name: Ensure curl is installed
+  ansible.builtin.apt:
+    package: curl
+    state: latest
+
 - name: Download func-e install script
   ansible.builtin.shell: curl -L https://func-e.io/install.sh | bash -s -- -b /usr/local/bin
 

@@ -13,7 +13,12 @@
     mode: "644"
   notify: Systemd Resolved Restarted
 
-- name: Link systemd-resolved resolv.cont to /etc/resolv.conf
+- name: Ensure resolv.conf is mutable
+  ansible.builtin.file:
+    path: /etc/resolv.conf
+    attributes: "-i"
+
+- name: Link systemd-resolved resolv.conf to /etc/resolv.conf
   ansible.builtin.file:
     src: /run/systemd/resolve/stub-resolv.conf
     dest: /etc/resolv.conf

@@ -1,0 +1,35 @@
+---
+# @meta description: >
+# Role to initially configure host systems
+# - configure systemd-resolved
+# @end
+
+- name: Install systemd-resolved
+  ansible.builtin.apt:
+    name: systemd-resolved
+    state: latest
+
+- name: Remove explicit DNS
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^\s*DNS=.*$'
+    # line: "#DNS=1.1.1.1"
+    state: absent
+
+- name: Disable LLMNR for systemd-resolved
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^#\s*LLMNR=.*$'
+    line: "LLMNR=no"
+
+- name: Remove DNSStubListeners line
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/resolved.conf
+    regexp: '^\s*DNSStubListener=.*$'
+    # line: "#DNSStubListener=yes"
+    state: absent
+
+- name: Ensure systemd-resolved restarted
+  ansible.builtin.service:
+    name: systemd-resolved
+    state: restarted

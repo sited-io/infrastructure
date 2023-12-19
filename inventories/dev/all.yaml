@@ -52,11 +52,35 @@ all:
 
   hosts:
     eudea-dev.peoplesmarkets.com:
+      private_ipv4_address: 10.0.0.1
+      private_ipv6_address: fc00::1
     euliania-dev.peoplesmarkets.com:
+      private_ipv4_address: 10.0.0.2
+      private_ipv6_address: fc00::2
     eurelia-dev.peoplesmarkets.com:
+      private_ipv4_address: 10.0.0.3
+      private_ipv6_address: fc00::3
     euria-dev.peoplesmarkets.com:
+      private_ipv4_address: 10.0.0.4
+      private_ipv6_address: fc00::4
     eudokia-dev.peoplesmarkets.com:
+      private_ipv4_address: 10.0.0.5
+      private_ipv6_address: fc00::5
     eudel-dev.peoplesmarkets.com:
+      private_ipv4_address: 10.0.0.6
+      private_ipv6_address: fc00::6
     euri-dev.peoplesmarkets.com:
+      private_ipv4_address: 10.0.0.7
+      private_ipv6_address: fc00::7
     eugene-dev.peoplesmarkets.com:
+      private_ipv4_address: 10.0.0.8
+      private_ipv6_address: fc00::8
     euclid-dev.peoplesmarkets.com:
+      private_ipv4_address: 10.0.0.9
+      private_ipv6_address: fc00::9
+    eunice-dev.peoplesmarkets.com:
+      private_ipv4_address: 10.0.0.10
+      private_ipv6_address: fc00::10
+    euphoria-dev.peoplesmarkets.com:
+      private_ipv4_address: 10.0.0.11
+      private_ipv6_address: fc00::11

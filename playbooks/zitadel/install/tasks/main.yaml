@@ -16,7 +16,7 @@
 
 - name: Ensure zitadel master key on Vault
   ansible.builtin.pause:
-    prompt: Save 32 bit master key to 'kv/zitadel/master_key' 'key=****', 'kv/zitadel/smtp' 'username=***' 'password=***' and 'kv/zitadel/users/admin' 'username=***' 'password=***'
+    prompt: Save 32 bit master key to 'kv2/zitadel/master_key' 'key=****', 'kv2/zitadel/smtp' 'username=***' 'password=***' and 'kv2/zitadel/users/admin' 'username=***' 'password=***'
   tags: always
 
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
@@ -131,4 +131,4 @@
 
 # Organisation -> + -> "Org Owner"
 
-# => save to vault under 'kv/zitadel/users/service' client_secret=****
+# => save to vault under 'kv2/zitadel/users/service' client_secret=****

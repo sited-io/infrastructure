@@ -2,3 +2,7 @@
 - import_playbook: configure.yaml
   tags:
     - configure
+
+- import_playbook: dns.yaml
+  tags:
+    - dns

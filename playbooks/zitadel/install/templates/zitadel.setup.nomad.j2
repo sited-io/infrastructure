@@ -36,7 +36,7 @@ job "zitadel-setup" {
         left_delimiter = "[["
         right_delimiter = "]]"
         data = <<EOF
-ZITADEL_MASTERKEY=[[ with secret "kv/zitadel/master_key" ]][[ .Data.key ]][[ end ]]
+ZITADEL_MASTERKEY=[[ with secret "kv2/data/zitadel/master_key" ]][[ .Data.data.key ]][[ end ]]
 EOF
       }
 
@@ -49,16 +49,16 @@ FirstInstance:
   Org:
     Name: '{{ domain }}'
     Human:
-      Username: '[[ with secret "kv/zitadel/users/admin" ]][[ .Data.username ]][[ end ]]'
-      Password: '[[ with secret "kv/zitadel/users/admin" ]][[ .Data.password ]][[ end ]]'
+      Username: '[[ with secret "kv2/data/zitadel/users/admin" ]][[ .Data.data.username ]][[ end ]]'
+      Password: '[[ with secret "kv2/data/zitadel/users/admin" ]][[ .Data.data.password ]][[ end ]]'
       Email:
-        Address: '[[ with secret "kv/zitadel/users/admin" ]][[ .Data.username ]][[ end ]]'
+        Address: '[[ with secret "kv2/data/zitadel/users/admin" ]][[ .Data.data.username ]][[ end ]]'
         Verified: true
   SMTPConfiguration:
     SMTP:
       Host: '{{ zitadel.smtp.host }}'
-      User: '[[ with secret "kv/zitadel/smtp" ]][[ .Data.username ]][[ end ]]'
-      Password: '[[ with secret "kv/zitadel/smtp" ]][[ .Data.password ]][[ end ]]'
+      User: '[[ with secret "kv2/data/zitadel/smtp" ]][[ .Data.data.username ]][[ end ]]'
+      Password: '[[ with secret "kv2/data/zitadel/smtp" ]][[ .Data.data.password ]][[ end ]]'
     TLS: true
     From: '{{ zitadel.smtp.from }}'
     FromName: '{{ zitadel.smtp.from }}'
@@ -82,8 +82,8 @@ DefaultInstance:
   SMTPConfiguration:
     SMTP:
       Host: '{{ zitadel.smtp.host }}'
-      User: '[[ with secret "kv/zitadel/smtp" ]][[ .Data.username ]][[ end ]]'
-      Password: '[[ with secret "kv/zitadel/smtp" ]][[ .Data.password ]][[ end ]]'
+      User: '[[ with secret "kv2/data/zitadel/smtp" ]][[ .Data.data.username ]][[ end ]]'
+      Password: '[[ with secret "kv2/data/zitadel/smtp" ]][[ .Data.data.password ]][[ end ]]'
     From: '{{ zitadel.smtp.from }}'
     FromName: '{{ zitadel.smtp.from }}'
 

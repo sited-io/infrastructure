@@ -3,6 +3,11 @@
   tags:
     - vault
 
+- import_playbook: consul_intentions.yaml
+  tags:
+    - consul_intentions
+    - add
+
 - import_playbook: vault_services.yaml
   tags:
     - vault_services
@@ -22,7 +27,4 @@
     - public_gateway
     - add
 
-- import_playbook: consul_intentions.yaml
-  tags:
-    - consul_intentions
-    - add
+

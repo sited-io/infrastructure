@@ -102,9 +102,16 @@
     owner: consul
     group: consul
     mode: "664"
+  register: cockroach_service_file_changed
   notify:
     - envoy-sidecar for cockroach-sql
     - envoy-sidecar for cockroach-http
+
+- name: Restart consul if cockroach.service changed
+  ansible.builtin.service:
+    name: consul
+    state: restarted
+  when: cockroach_service_file_changed.changed
 
 - run_once: true
   delegate_to: localhost

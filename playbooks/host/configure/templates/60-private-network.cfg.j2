@@ -1,0 +1,8 @@
+auto eth1
+iface eth1 inet static
+  address {{ hostvars[inventory_hostname].private_ipv4_address }}
+  netmask 255.255.255.0
+
+iface eth1 inet6 static
+  address {{ hostvars[inventory_hostname].private_ipv6_address }}
+  netmask 64

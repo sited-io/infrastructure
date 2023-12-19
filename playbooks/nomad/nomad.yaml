@@ -8,6 +8,11 @@
   import_playbook: configure.yaml
   tags:
     - configure
+  
+- name: Integrate with consul
+  import_playbook: consul.yaml
+  tags:
+    - consul
 
 - name: Configure nomad ACL
   import_playbook: acl.yaml
@@ -18,11 +23,6 @@
   import_playbook: vault.yaml
   tags:
     - vault
-
-- name: Integrate with consul
-  import_playbook: consul.yaml
-  tags:
-    - consul
 
 - name: Configure mTLS
   import_playbook: tls.yaml

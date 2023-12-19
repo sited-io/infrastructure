@@ -30,27 +30,16 @@
       register: copy_server_acl_config_out
       when: inventory_hostname in groups.consul_servers
 
-    - name: Copy client ACL configuration
-      ansible.builtin.template:
-        src: client.acl.hcl.j2
-        dest: "{{ consul.config_dir }}/client.acl.hcl"
-        owner: consul
-        group: consul
-        mode: 0664
-      register: copy_client_acl_config_out
-      when: inventory_hostname in groups.consul_clients
-
     - name: Restart consul service
-      throttle: 2
       ansible.builtin.service:
         name: consul
         state: restarted
-      when: copy_server_acl_config_out.changed or copy_client_acl_config_out.changed
+      when: copy_server_acl_config_out.changed
 
-- name: Wait
-  ansible.builtin.pause:
-    seconds: 10
-  when: copy_server_acl_config_out.changed or copy_client_acl_config_out.changed
+    - name: Wait
+      ansible.builtin.pause:
+        seconds: 30
+      when: copy_server_acl_config_out.changed
 
 - run_once: true
   delegate_to: localhost
@@ -62,18 +51,18 @@
   block:
     - name: Ensure kv secret engine is enabled on vault
       ansible.builtin.command: |
-        vault secrets enable -path=kv kv
+        vault secrets enable -path=kv2 -version=2 kv
       register: enable_kv2_out
       failed_when: enable_kv2_out.rc != 0 and 'path is already in use' not in enable_kv2_out.stderr
 
     - name: Manually initialize ACL on consul server
       ansible.builtin.pause:
-        prompt: Login to one consul server and run 'consul acl bootstrap' save SecretID to 'kv/root/consul/bootstrap_token'
+        prompt: Login to one consul server and run 'consul acl bootstrap' save SecretID as 'token' to '/root/consul/bootstrap_token'
 
     - name: Get consul bootstrap token from vault
       ansible.builtin.command: |
-        vault read -field=token \
-          kv/root/consul/bootstrap_token
+        vault kv get -mount=kv2 -field=token \
+          /root/consul/bootstrap_token
       register: bootstrap_token_out
 
     - name: Ensure consul secret engine is enabled on vault
@@ -128,6 +117,25 @@
   when: inventory_hostname in groups.vault
   notify: Vault Restarted
 
+- name: Copy client ACL allow configuration
+  ansible.builtin.template:
+    src: client.acl.allow.hcl.j2
+    dest: "{{ consul.config_dir }}/client.acl.hcl"
+    owner: consul
+    group: consul
+    mode: 0664
+  when: inventory_hostname in groups.consul_clients
+
+- name: Restart consul service
+  ansible.builtin.service:
+    name: consul
+    state: restarted
+  when: inventory_hostname in groups.consul_clients
+
+- name: Wait
+  ansible.builtin.pause:
+    seconds: 20
+
 - name: Set default dns token
   ansible.builtin.command: |
     consul acl set-agent-token \
@@ -150,4 +158,19 @@
       -token "{{ management_token }}" \
       -http-addr "{{ ansible_eth1.ipv4.address }}:{{ consul.ports.http }}" \
       agent "{{ consul_client_token }}"
+  when: inventory_hostname in groups.consul_clients
+
+- name: Copy client ACL configuration
+  ansible.builtin.template:
+    src: client.acl.hcl.j2
+    dest: "{{ consul.config_dir }}/client.acl.hcl"
+    owner: consul
+    group: consul
+    mode: 0664
+  when: inventory_hostname in groups.consul_clients
+
+- name: Restart consul service
+  ansible.builtin.service:
+    name: consul
+    state: restarted
   when: inventory_hostname in groups.consul_clients

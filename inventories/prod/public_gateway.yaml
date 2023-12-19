@@ -6,9 +6,9 @@ all:
       sites_dir: /etc/nginx/conf.d
       nginx_package_url: https://nginx.org/download/{{ nginx_version }}.tar.gz
       health_url: "health.{{ domain }}"
-      origin_certificate: "{{ secrets.cloudflare.origin_certificate.stdout.replace('\\n', '\n') }}"
+      origin_certificate: "{{ secrets.cloudflare.origin_certificate.replace('\\n', '\n') }}"
       origin_certificate_key: "{{ secrets.cloudflare.origin_certificate_key.replace('\\n', '\n') }}"
-      custom_origin_certificate: "{{ secrets.cloudflare.origin_certificate.stdout.replace('\\n', '\n') }}"
+      custom_origin_certificate: "{{ secrets.cloudflare.origin_certificate.replace('\\n', '\n') }}"
       custom_origin_certificate_key: "{{ secrets.cloudflare.origin_certificate_key.replace('\\n', '\n') }}"
 
   children:

@@ -6,8 +6,6 @@ bind_addr   = "{{ ansible_eth1.ipv4.address }}"
 
 retry_join = {{ groups.consul_servers | difference([inventory_hostname]) | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address']) | to_json }}
 
-encrypt = "{{ gossip_encryption_key }}"
-
 # Logging
 log_level = "INFO"
 

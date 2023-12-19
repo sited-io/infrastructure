@@ -9,7 +9,7 @@
 
 - name: Manually add service user with credentials
   ansible.builtin.pause:
-    prompt: Login to Zitadel admin UI and create service user. Afterwards add credentials to vault at kv/zitadel/users/service
+    prompt: Login to Zitadel admin UI and create service user. Afterwards add credentials to vault at kv2/zitadel/users/service
 
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
 

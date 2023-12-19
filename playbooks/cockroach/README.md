@@ -3,15 +3,15 @@
 Developement environment
 
 ```sh
-ansible-playbook -i inventories/dev/ playbooks/cockroach/cockroach.yaml
-ansible-playbook -i inventories/dev/ playbooks/public_gateway/public_gateway.yaml --tags configure
+ansible-playbook -i inventories/dev/ -e @vaults/dev.yaml --vault-password-file=.dev_ansible_vault_pass playbooks/cockroach/cockroach.yaml
+ansible-playbook -i inventories/dev/ -e @vaults/dev.yaml --vault-password-file=.dev_ansible_vault_pass playbooks/public_gateway/public_gateway.yaml --tags configure
 ```
 
 Production environment
 
 ```sh
-ansible-playbook -i inventories/prod/ playbooks/cockroach/cockroach.yaml
-ansible-playbook -i inventories/prod/ playbooks/public_gateway/public_gateway.yaml --tags configure
+ansible-playbook -i inventories/prod/ -e @vaults/prod.yaml --vault-password-file=.prod_ansible_vault_pass playbooks/cockroach/cockroach.yaml
+ansible-playbook -i inventories/prod/ -e @vaults/prod.yaml --vault-password-file=.prod_ansible_vault_pass playbooks/public_gateway/public_gateway.yaml --tags configure
 ```
 
 ## Roles
