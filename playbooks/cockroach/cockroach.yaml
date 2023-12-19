@@ -18,3 +18,7 @@
 - import_playbook: credentials.yaml
   tags:
     - credentials
+
+- import_playbook: backups.yaml
+  tags:
+    - backups

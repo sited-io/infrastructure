@@ -8,6 +8,7 @@ all:
       lib_dir: /usr/local/lib/cockroach
       certs_dir: /usr/local/lib/cockroach/certs
       binary_url: https://binaries.cockroachdb.com/cockroach-v23.1.10.linux-amd64.tgz
+      backup_bucket_name: dev-backup
       ports:
         listen: 26257
         http: 8080

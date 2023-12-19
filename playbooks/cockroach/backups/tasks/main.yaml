@@ -1,0 +1,53 @@
+---
+# @meta description: >
+# Requires Cockroach cluster to be installed and configured
+#
+# - Configure full backups to S3
+# @end
+
+- name: Manual Step Notification
+  ansible.builtin.pause:
+    prompt: Ensure cloudflare S3 bucket is set up and credentials 'access_key_id', 'secret_access_key' and 'url' are saved to vault kv2 '/cloudflare/r2/backup'
+
+- ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+  block:
+    - name: Get cloudflare s3 bucket credentials
+      ansible.builtin.command: >-
+        vault kv get -mount=kv2 -format=json \
+          /cloudflare/r2/backup
+      register: bucket_credentials_out
+
+    - name: Get cockroach management password
+      ansible.builtin.command: >-
+        vault kv get -mount=kv2 -field=password \
+          /cockroach/clients/global_management
+      register: management_password_out
+
+- set_fact:
+    access_key_id: "{{ bucket_credentials_out.stdout | from_json | json_query('data.data.access_key_id') }}"
+    secret_access_key: "{{ bucket_credentials_out.stdout | from_json | json_query('data.data.secret_access_key') }}"
+    url: "{{ bucket_credentials_out.stdout | from_json | json_query('data.data.url') }}"
+    management_password: "{{ management_password_out.stdout }}"
+
+- run_once: true
+  delegate_to: "{{ groups.cockroach[0] }}"
+  become: true
+  block:
+    - name: Create external connection on cockroach
+      ansible.builtin.command: >-
+        cockroach sql --url postgresql://global_management:{{ management_password }}@{{ localhost_ip }}:{{ cockroach.ports.sql }}/defaultdb?sslmode=prefer \
+          --execute "CREATE EXTERNAL CONNECTION backup_bucket AS 's3://{{ cockroach.backup_bucket_name }}/full?AWS_ACCESS_KEY_ID={{ access_key_id }}&AWS_SECRET_ACCESS_KEY={{ secret_access_key }}&AWS_ENDPOINT={{ url }}&AWS_REGION=auto';"
+      register: create_external_connection_out
+      failed_when: create_external_connection_out.rc != 0 and 'already exists' not in create_external_connection_out.stderr
+
+    - name: Create backup schedule on cockroach
+      ansible.builtin.command: >-
+        cockroach sql --url postgresql://global_management:{{ management_password }}@{{ localhost_ip }}:{{ cockroach.ports.sql }}/defaultdb?sslmode=prefer \
+          --execute "CREATE SCHEDULE IF NOT EXISTS full_backup_schedule FOR BACKUP INTO 'external://backup_bucket' RECURRING '@daily' FULL BACKUP ALWAYS;"
