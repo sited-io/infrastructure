@@ -4,7 +4,10 @@ all:
     services:
       github_service_deployer_password_key: DEV_SERVICE_DEPLOYER_PASSWORD
       frontend:
-        main: main-website
+        - name: main-website
+          url: dev.peoplesmarkets.com
+        - name: shop-website
+          url: mysite-dev.peoplesmarkets.com
       backend:
         - name: zitadel
           database: zitadel
