@@ -1,0 +1,26 @@
+{
+  "Kind": "service-intentions",
+  "Name": "services-proxy-grpc",
+  "Sources": [
+    {
+      "Action": "allow",
+      "Name": "commerce-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "media-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "payment-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "report-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "stripe-webhooks-api"
+    }
+  ]
+}

@@ -9,6 +9,11 @@
   tags:
     - configure
 
+- name: Configure gossip encryption
+  import_playbook: gossip.yaml
+  tags:
+    - gossip
+
 - name: Configure ACL
   import_playbook: acl.yaml
   tags:
@@ -18,11 +23,6 @@
   import_playbook: dns.yaml
   tags:
     - dns
-
-- name: Configure gossip encryption
-  import_playbook: gossip.yaml
-  tags:
-    - gossip
 
 - name: Configure tls
   import_playbook: tls.yaml

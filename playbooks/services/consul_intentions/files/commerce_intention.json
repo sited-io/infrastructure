@@ -9,6 +9,10 @@
     {
       "Action": "allow",
       "Name": "media-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "services-proxy-grpc"
     }
   ]
 }

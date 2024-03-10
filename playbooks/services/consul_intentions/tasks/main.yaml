@@ -66,3 +66,30 @@
     - name: Create consul intentions for payment
       ansible.builtin.command: >-
         consul config write /tmp/services/consul_services/payment_intention.json
+
+    - name: Copy report intentions configurations to working directory
+      ansible.builtin.copy:
+        src: report_intention.json
+        dest: /tmp/services/consul_services/report_intention.json
+
+    - name: Create consul intentions for report
+      ansible.builtin.command: >-
+        consul config write /tmp/services/consul_services/report_intention.json
+
+    - name: Copy stripe-webhooks intentions configurations to working directory
+      ansible.builtin.copy:
+        src: stripe-webhooks_intention.json
+        dest: /tmp/services/consul_services/stripe-webhooks_intention.json
+
+    - name: Create consul intentions for stripe-webhooks
+      ansible.builtin.command: >-
+        consul config write /tmp/services/consul_services/stripe-webhooks_intention.json
+
+    - name: Copy services-proxy intentions configurations to working directory
+      ansible.builtin.copy:
+        src: services-proxy_intention.json
+        dest: /tmp/services/consul_services/services-proxy_intention.json
+
+    - name: Create consul intentions for services-proxy
+      ansible.builtin.command: >-
+        consul config write /tmp/services/consul_services/services-proxy_intention.json

@@ -1,0 +1,90 @@
+job "services-proxy" {
+  datacenters = ["dc1"]
+  type = "service"
+
+  group "services-proxy-grpc" {
+    network {
+      mode = "bridge"
+
+      port "grpc" {}
+    }
+
+    service {
+      name = "services-proxy-grpc"
+      port = "grpc"
+
+      connect {
+        sidecar_service {
+          proxy {
+{% for service in gateway_services %}
+            upstreams {
+              destination_name = "{{ service.name }}-api"
+              local_bind_port = 1000{{ loop.index }}
+            }
+{% endfor %}
+          }
+        }
+      }
+
+      // check {
+      //   type     = "grpc"
+      //   interval = "20s"
+      //   timeout  = "2s"
+      // }
+    }
+
+    task "services-proxy-grpc" {
+      driver = "docker"
+
+      config {
+        image = "nginx"
+
+        volumes = [
+          "local:/etc/nginx/conf.d",
+        ]
+      }
+
+      template {
+        destination   = "local/load-balancer.conf"
+        change_mode   = "signal"
+        change_signal = "SIGHUP"
+        left_delimiter  = "[["
+        right_delimiter = "]]"
+
+        data = <<EOF
+{% for service in gateway_services %}
+upstream {{ service.name }}_backends {
+  server [[ env "NOMAD_UPSTREAM_ADDR_{{ service.name }}-api" ]];
+}
+{% endfor %}
+
+
+server {
+  listen *:[[ env "NOMAD_PORT_grpc" ]] default_server;
+  listen [::]:[[ env "NOMAD_PORT_grpc" ]] default_server;
+  http2 on;
+
+  grpc_set_header Host $host;
+  grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+{% for service in gateway_services %}
+{% if 'grpc_services' in service %}
+{% for grpc_service in service.grpc_services %}
+
+  location /{{ grpc_service }} {
+{% if 'proxy_extra_configurations' in service %}
+{% for extra_configuration in service.proxy_extra_configurations %}
+    {{ extra_configuration }}
+{% endfor %}
+{% endif %}
+    grpc_pass grpc://{{ service.name }}_backends;
+  }
+{% endfor %}
+{% endif %}
+{% endfor %}
+}
+EOF
+      }
+    }
+  }
+}

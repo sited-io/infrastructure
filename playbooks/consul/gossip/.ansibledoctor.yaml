@@ -1,5 +1,0 @@
----
-custom_header: HEADER.md
-logging:
-  level: INFO
-template: readme

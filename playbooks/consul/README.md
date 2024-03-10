@@ -20,10 +20,10 @@ ansible-playbook -i inventories/prod/ -e @vaults/prod.yaml --vault-password-file
 
 ### [2: Configure](./configure/)
 
-### [3: ACL - Access Control Lists](./acl/)
+### [3: Gossip](./gossip/)
 
-### [4: Gossip](./gossip/)
+### [4: ACL - Access Control Lists](./acl/)
 
-### [5: TLS - Transport Layer Security](./tls/)
+### [5: DNS - Domain Name System](./dns/)
 
-### [6: DNS - Domain Name System](./dns/)
+### [6: TLS - Transport Layer Security](./tls/)

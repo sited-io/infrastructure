@@ -5,45 +5,59 @@
 # - Configure Nginx as public facing proxy for service backends
 # @end
 
-- ansible.builtin.import_tasks: ../../common-tasks/ufw/ufw.yaml
+# - ansible.builtin.import_tasks: ../../common-tasks/ufw/ufw.yaml
 
-- name: Configure firewall allow http 443
-  community.general.ufw:
-    rule: allow
-    port: "443"
-    proto: tcp
+# - name: Configure firewall allow http 443
+#   community.general.ufw:
+#     rule: allow
+#     port: "443"
+#     proto: tcp
 
 - ansible.builtin.set_fact:
     gateway_services: "{{ services.backend | selectattr('use_ingress_gateway', 'true') }}"
     frontend_services: "{{ services.frontend }}"
 
-- name: Copy services gateway nginx config template
-  ansible.builtin.template:
-    src: services_gateway.conf.tpl.j2
-    dest: "{{ consul_template.data_dir }}/services_gateway.conf.tpl"
-    owner: root
-    group: root
-    mode: "440"
-  notify: consul-template unit Restarted
+# - name: Copy services gateway nginx config template
+#   ansible.builtin.template:
+#     src: services_gateway.conf.tpl.j2
+#     dest: "{{ consul_template.data_dir }}/services_gateway.conf.tpl"
+#     owner: root
+#     group: root
+#     mode: "440"
+#   notify: consul-template unit Restarted
 
-- name: Copy fronted gateway nginx config template
-  ansible.builtin.template:
-    src: frontend_gateway_conf.tpl.j2
-    dest: "{{ consul_template.data_dir }}/frontend_gateway.conf.tpl"
-    owner: root
-    group: root
-    mode: "440"
-  notify: consul-template unit Restarted
+# - name: Copy fronted gateway nginx config template
+#   ansible.builtin.template:
+#     src: frontend_gateway_conf.tpl.j2
+#     dest: "{{ consul_template.data_dir }}/frontend_gateway.conf.tpl"
+#     owner: root
+#     group: root
+#     mode: "440"
+#   notify: consul-template unit Restarted
 
-- name: Copy services gateway consul-template config
-  ansible.builtin.template:
-    src: services_gateway_conf_ctmpl.hcl.j2
-    dest: "{{ consul_template.config_dir }}/services_gateway_conf_ctmpl.hcl"
-    owner: root
-    group: root
-    mode: "440"
-  notify: consul-template unit Restarted
+# - name: Copy services gateway consul-template config
+#   ansible.builtin.template:
+#     src: services_gateway_conf_ctmpl.hcl.j2
+#     dest: "{{ consul_template.config_dir }}/services_gateway_conf_ctmpl.hcl"
+#     owner: root
+#     group: root
+#     mode: "440"
+#   notify: consul-template unit Restarted
 
-- ansible.builtin.file:
-    path: /etc/nginx/conf.d/frontend_gateway_conf
-    state: absent
+# - ansible.builtin.file:
+#     path: /etc/nginx/conf.d/frontend_gateway_conf
+#     state: absent
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  block:
+    - name: Ensure local working directory
+      ansible.builtin.file:
+        path: /tmp/services/public_gateway
+        state: directory
+
+    - name: Prepare proxy nomad job spec
+      ansible.builtin.template:
+        src: services_proxy.nomad.j2
+        dest: /tmp/services/public_gateway/services_proxy.nomad

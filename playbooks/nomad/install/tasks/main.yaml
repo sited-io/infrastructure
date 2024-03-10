@@ -10,7 +10,7 @@
 - name: Install nomad package
   ansible.builtin.apt:
     name: nomad
-    state: present
+    state: latest
     update_cache: true
 
 - name: Ensure nomad service is enabled

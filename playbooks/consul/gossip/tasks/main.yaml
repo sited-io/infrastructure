@@ -2,15 +2,18 @@
 # @meta description: >
 # Requires [Vault](../../vault/) to be run in order to use consul secret engine
 #
-# - Generate initial gossip encryption key
-# - Install and configure [consul-template](https://github.com/hashicorp/consul-template) in order to update consul agent configuration when gossip key gets rotated
+# - Generate initial gossip encryption key and configure in agent config
 # @end
-#
-# @todo automation: Periodically rotate gossip encryption key
-
-- ansible.builtin.import_tasks: ../../common-tasks/consul-template/consul-template.yaml
 
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
+
+- name: Ensure consul config directory
+  ansible.builtin.file:
+    path: "{{ consul.config_dir }}"
+    state: directory
+    owner: consul
+    group: consul
+    mode: "774"
 
 - run_once: true
   delegate_to: localhost
@@ -42,68 +45,31 @@
         vault kv put -mount=kv2 /consul/config/encryption \
           key={{ gossip_key }}
 
-    - name: Copy renew-consul-gossip policy to working directory
-      ansible.builtin.copy:
-        src: renew-consul-gossip-key.policy.hcl
-        dest: /tmp/consul/gossip/renew-consul-gossip-key.policy.hcl
+- ansible.builtin.file:
+    path: "{{ consul.config_dir }}/server.gossip.hcl"
+    state: absent
 
-    - name: Create policy
-      ansible.builtin.command: |
-        vault policy write renew-consul-gossip-key \
-          /tmp/consul/gossip/renew-consul-gossip-key.policy.hcl
-
-    - name: Get vault token
-      ansible.builtin.command: |
-        vault token create -field=token \
-          -policy=renew-consul-gossip-key \
-          -period=24h
-      register: vault_token_out
-
-- name: Ensure jq is installed
-  ansible.builtin.apt:
-    name: jq
-    state: latest
-    update_cache: true
-
-- name: Copy Vault token to token directory
-  ansible.builtin.copy:
-    content: "{{ vault_token_out.stdout }}"
-    dest: "{{ consul_template.token_dir }}/vault/.consul_gossip"
-    owner: root
-    group: root
-    mode: "440"
-  notify: consul-template unit Restarted
-
-- name: Copy gossip key consul template config
+- name: Copy server gossip configuration
   ansible.builtin.template:
-    src: consul_gossip_ctmpl.hcl
-    dest: "{{ consul_template.config_dir }}/consul_gossip_ctmpl.hcl"
-    owner: root
-    group: root
+    src: gossip.hcl.j2
+    dest: "{{ consul.config_dir }}/gossip.hcl"
+    owner: consul
+    group: consul
     mode: "440"
-  notify: consul-template unit Restarted
 
-- name: Copy consul server token template
-  ansible.builtin.copy:
-    src: consul-server.token.tpl
-    dest: "{{ consul_template.data_dir }}/consul-server.token.tpl"
-  notify: consul-template unit Restarted
+- name: Restart consul service
+  ansible.builtin.service:
+    name: consul
+    state: restarted
+  when: inventory_hostname in groups.consul_servers
 
-- name: Copy gossip key template
-  ansible.builtin.copy:
-    src: gossip.key.tpl
-    dest: "{{ consul_template.data_dir }}/gossip.key.tpl"
-  notify: consul-template unit Restarted
+- name: Wait
+  ansible.builtin.pause:
+    seconds: 20
 
-- name: Ensure gossip directory
-  ansible.builtin.file:
-    path: "/opt/consul/gossip"
-    state: directory
-  notify: consul-template unit Restarted
-
-- name: Copy rotate script
-  ansible.builtin.template:
-    src: rotate.sh
-    dest: "/opt/consul/gossip/rotate_key.sh"
-    mode: 0774
-  notify: consul-template unit Restarted
+- name: Restart consul service
+  throttle: 2
+  ansible.builtin.service:
+    name: consul
+    state: restarted
+  when: inventory_hostname in groups.consul_clients

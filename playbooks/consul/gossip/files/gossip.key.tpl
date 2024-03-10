@@ -1,1 +1,0 @@
-[[ with secret "kv2/data/consul/config/encryption" ]][[ .Data.data.key ]][[ end ]]

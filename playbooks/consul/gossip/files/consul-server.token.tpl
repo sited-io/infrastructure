@@ -1,1 +1,0 @@
-[[ with secret "consul/creds/consul_server_role" ]][[ .Data.token ]][[ end ]]

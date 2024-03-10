@@ -1,7 +1,0 @@
----
-- name: consul-template unit Restarted
-  ansible.builtin.service:
-    name: consul-template@consul_gossip_ctmpl.service
-    state: restarted
-    enabled: true
-    daemon_reload: true

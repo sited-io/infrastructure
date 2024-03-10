@@ -1,11 +1,7 @@
 {
   "Kind": "service-intentions",
-  "Name": "media-api",
+  "Name": "stripe-webhooks-api",
   "Sources": [
-    {
-      "Action": "allow",
-      "Name": "stripe-webhooks-api"
-    },
     {
       "Action": "allow",
       "Name": "services-proxy-grpc"
