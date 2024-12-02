@@ -24,7 +24,12 @@
   tags:
     - dns
 
-- name: Configure tls
-  import_playbook: tls.yaml
+- name: Configure PKI for SSL certificates
+  import_playbook: ssl_pki.yaml
   tags:
-    - tls
+    - ssl_pki
+
+- name: Configure SSL certificates from vault
+  import_playbook: ssl_update.yaml
+  tags:
+    - ssl_update

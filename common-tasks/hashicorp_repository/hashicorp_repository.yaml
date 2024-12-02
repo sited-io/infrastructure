@@ -1,3 +1,4 @@
+---
 - name: Install gpg
   ansible.builtin.apt:
     name: gpg

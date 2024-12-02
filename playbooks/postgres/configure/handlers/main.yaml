@@ -1,0 +1,7 @@
+---
+- name: Restart Postgres
+  ansible.builtin.service:
+    name: postgresql@17-main.service
+    state: restarted
+    enabled: true
+  become_user: root

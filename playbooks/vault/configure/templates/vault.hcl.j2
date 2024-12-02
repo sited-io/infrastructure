@@ -18,7 +18,7 @@ listener "tcp" {
 storage "raft" {
   path    = "{{ vault.data_dir }}"
   node_id = "{{ inventory_hostname }}"
-{% for hostname in (groups.vault | difference([inventory_hostname]) | list) %}
+{% for hostname in (groups.vault | difference([inventory_hostname]) | sort | list) %}
 
   retry_join {
     leader_tls_servername   = "{{ hostname }}"
@@ -28,12 +28,4 @@ storage "raft" {
     leader_client_key_file  = "{{ vault.certs_dir }}/client.key"
   }
 {% endfor %}
-}
-
-seal "gcpckms" {
-  credentials = "{{ vault.config_dir }}/gcp_credentials.json"
-  project     = "{{ vault.auto_unseal.project }}"
-  region      = "{{ vault.auto_unseal.region }}"
-  key_ring    = "{{ vault.auto_unseal.key_ring }}"
-  crypto_key  = "{{ vault.auto_unseal.crypto_key }}"
 }

@@ -1,0 +1,6 @@
+---
+- hosts: postgres
+  become: true
+  become_user: postgres
+  roles:
+    - configure

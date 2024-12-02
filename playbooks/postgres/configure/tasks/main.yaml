@@ -1,0 +1,56 @@
+---
+- ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
+
+- name: Allow remote access
+  community.postgresql.postgresql_pg_hba:
+    dest: /etc/postgresql/17/main/pg_hba.conf
+    contype: host
+    users: all
+    source: "0.0.0.0/0"
+    databases: all
+    method: md5
+  notify: Restart Postgres
+
+- name: Set listen address
+  community.postgresql.postgresql_set:
+    name: listen_addresses
+    value: "localhost, {{ ansible_eth1.ipv4.address }}"
+    port: "{{ postgres.ports.sql }}"
+  notify: Restart Postgres
+
+- name: Check if postgres user password exists in vault
+  run_once: true
+  delegate_to: localhost
+  become: false
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+  ansible.builtin.command: |
+    vault kv get -mount=kv2 -field=password /postgres/config/postgres_password
+  register: postgres_password_out
+  ignore_errors: true
+
+- ansible.builtin.set_fact:
+    postgres_password: "{{ 999999999999999 | random | to_uuid }}"
+  when: postgres_password_out.rc != 0
+
+- name: Set postgres user password
+  community.postgresql.postgresql_user:
+    name: postgres
+    password: "{{ postgres_password }}"
+    port: "{{ postgres.ports.sql }}"
+  environment:
+    PGOPTIONS: "-c password_encryption=scram-sha-256"
+  when: postgres_password_out.rc != 0
+
+- name: Save postgres user password to vault
+  run_once: true
+  delegate_to: localhost
+  become: false
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+  ansible.builtin.command: |
+    vault kv put -mount=kv2 /postgres/config/postgres_password \
+      password={{ postgres_password }}
+  when: postgres_password_out.rc != 0

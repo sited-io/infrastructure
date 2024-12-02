@@ -1,6 +1,12 @@
 ---
-- name: consul-template unit Restarted
+- name: frontend services consul-template unit Restarted
   ansible.builtin.service:
-    name: consul-template@services_gateway_conf_ctmpl.service
+    name: consul-template@frontend_services_gateway_conf_ctmpl.service
+    state: restarted
+    enabled: true
+
+- name: backend services consul-template unit Restarted
+  ansible.builtin.service:
+    name: consul-template@backend_services_gateway_conf_ctmpl.service
     state: restarted
     enabled: true

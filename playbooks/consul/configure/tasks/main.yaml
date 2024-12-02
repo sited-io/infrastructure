@@ -4,40 +4,6 @@
 # - Basic configuration with initial gossip key
 # @end
 
-- name: Ensure local directory empty
-  run_once: true
-  delegate_to: localhost
-  become: false
-  ansible.builtin.file:
-    path: /tmp/consul/configure/local.keyring
-    state: absent
-
-- name: Check if keyring file exists
-  run_once: true
-  delegate_to: "{{ groups.consul_servers[0] }}"
-  ansible.builtin.stat:
-    path: /var/lib/consul/serf/local.keyring
-  register: keyring_file_exists
-
-- name: Get keyring if exists
-  run_once: true
-  delegate_to: "{{ groups.consul_servers[0] }}"
-  when: keyring_file_exists.stat.exists
-  ansible.builtin.fetch:
-    src: /var/lib/consul/serf/local.keyring
-    dest: /tmp/consul/configure/local.keyring
-    flat: true
-
-- name: Copy keyring file to all agents
-  when: keyring_file_exists.stat.exists
-  ansible.builtin.copy:
-    src: /tmp/consul/configure/local.keyring
-    dest: /var/lib/consul/serf/local.keyring
-    owner: consul
-    group: consul
-    mode: '0600'
-  notify: Consul Restarted
-
 - name: Ensure consul directories
   ansible.builtin.file:
     path: "{{ item }}"

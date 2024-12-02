@@ -1,0 +1,5 @@
+---
+- hosts: nomad
+  become: true
+  roles:
+    - ssl_pki

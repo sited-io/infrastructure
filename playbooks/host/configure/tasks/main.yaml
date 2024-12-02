@@ -31,57 +31,6 @@
     dest: /etc/network/interfaces.d/60-private-network.cfg
   notify: Enable network interface
 
-- name: Install locales-all
-  ansible.builtin.apt:
-    name: locales-all
-    state: latest
-
-- name: Install ntp
-  ansible.builtin.apt:
-    name: ntp
-    state: latest
-  register: install_ntp_out
-
-- name: Configure ntp with Google time servers
-  when: install_ntp_out.changed
-  block:
-    - name: Ensure ntp service stopped
-      ansible.builtin.service:
-        name: ntp
-        state: stopped
-
-    - name: Sync machines clock with Google
-      ansible.builtin.command: ntpd -q time.google.com
-
-    - name: Remove all servers
-      ansible.builtin.lineinfile:
-        path: /etc/ntpsec/ntp.conf
-        state: absent
-        regexp: "^server.*"
-
-    - name: Remove all pools
-      ansible.builtin.lineinfile:
-        path: /etc/ntpsec/ntp.conf
-        state: absent
-        regexp: "^pool.*"
-
-    - name: Add Google servers
-      ansible.builtin.lineinfile:
-        path: /etc/ntpsec/ntp.conf
-        line: "{{ item }}"
-        state: present
-      with_items:
-        - "server time1.google.com iburst"
-        - "server time2.google.com iburst"
-        - "server time3.google.com iburst"
-        - "server time4.google.com iburst"
-
-    - name: Ensure ntp service restarted and enabled
-      ansible.builtin.service:
-        name: ntp
-        state: restarted
-        enabled: true
-
 - ansible.builtin.import_tasks: ../../common-tasks/ufw/ufw.yaml
 
 - name: Configure firewall allow internal net
@@ -89,32 +38,12 @@
     rule: allow
     src: "{{ private_network_range }}"
 
-- name: Install systemd-resolved
+- name: Install locales-all
   ansible.builtin.apt:
-    name: systemd-resolved
+    name: locales-all
     state: latest
 
-- name: Use Cloudflare for public DNS
-  ansible.builtin.lineinfile:
-    path: /etc/systemd/resolved.conf
-    regexp: '^\s*DNS=.*$'
-    # line: "#DNS=1.1.1.1"
-    state: absent
-
-- name: Disable LLMNR for systemd-resolved
-  ansible.builtin.lineinfile:
-    path: /etc/systemd/resolved.conf
-    regexp: '^#\s*LLMNR=.*$'
-    line: "LLMNR=no"
-
-- name: Use stub file for systemd-resolved
-  ansible.builtin.lineinfile:
-    path: /etc/systemd/resolved.conf
-    regexp: '^\s*DNSStubListener=.*$'
-    # line: "#DNSStubListener=yes"
-    state: absent
-
-- name: Ensure systemd-resolved restarted
-  ansible.builtin.service:
-    name: systemd-resolved
-    state: restarted
+- name: Install Qemu guest agent
+  ansible.builtin.apt:
+    name: qemu-guest-agent
+    state: latest

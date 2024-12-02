@@ -1,0 +1,7 @@
+---
+- name: envoy-sidecar for postgres-sql
+  ansible.builtin.service:
+    name: envoy-sidecar@postgres-sql.service
+    state: restarted
+    enabled: true
+    daemon_reload: true

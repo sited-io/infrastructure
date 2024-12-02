@@ -1,0 +1,5 @@
+---
+- hosts: consul
+  become: true
+  roles:
+    - ssl_pki

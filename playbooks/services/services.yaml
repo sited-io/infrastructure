@@ -17,14 +17,17 @@
   tags:
     - nomad
 
-- import_playbook: cockroach.yaml
+# - import_playbook: cockroach.yaml
+#   tags:
+#     - cockroach
+#     - add
+
+- import_playbook: postgres.yaml
   tags:
-    - cockroach
+    - postgres
     - add
 
 - import_playbook: public_gateway.yaml
   tags:
     - public_gateway
     - add
-
-

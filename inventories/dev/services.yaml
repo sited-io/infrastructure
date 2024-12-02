@@ -4,62 +4,22 @@ all:
     services:
       github_service_deployer_password_key: DEV_SERVICE_DEPLOYER_PASSWORD
       frontend:
-        - name: main-website
-          url: dev.peoplesmarkets.com
-        - name: shop-website
-          url: mysite-dev.peoplesmarkets.com
+        - name: project-frontend
+          url: sited1.de
+          custom_origin: false
+        - name: dashboard-frontend
+          url: dashboard.sited1.de
+          custom_origin: false
+        - name: websites-frontend
+          url: "*.sited1.de"
+          custom_origin: false
+      databases:
+        - name: zitadel
+          user: zitadel_user
+        - name: websites
+          user: websites_user
+        - name: commerce_v2
+          user: commerce_v2_user
       backend:
-        - name: zitadel
-          database: zitadel
-          database_user: zitadel_admin
-          database_roles:
-            - CREATEDB
-            - CREATEROLE
-            - CREATELOGIN
-            - VIEWACTIVITY
-          use_ingress_gateway: false
-        - name: zitadel
-          database: zitadel
-          database_user: zitadel_user
-          database_roles:
-            - VIEWACTIVITY
-          use_ingress_gateway: false
-        - name: commerce
-          database: commerce
-          database_user: commerce_user
-          use_ingress_gateway: true
-          proxy_extra_configurations:
-            - "client_max_body_size 16M;"
-          grpc_services:
-            - "peoplesmarkets.commerce.v1.OfferService"
-            - "peoplesmarkets.commerce.v1.ShopService"
-            - "peoplesmarkets.commerce.v1.ShopCustomizationService"
-            - "peoplesmarkets.commerce.v1.ShopDomainService"
-            - "peoplesmarkets.commerce.v1.ShippingRateService"
-        - name: payment
-          database: payment
-          database_user: payment_user
-          use_ingress_gateway: true
-          grpc_services:
-            - "peoplesmarkets.payment.v1.StripeService"
-        - name: media
-          database: media
-          database_user: media_user
-          use_ingress_gateway: true
-          proxy_extra_configurations:
-            - "client_max_body_size 64M;"
-          grpc_services:
-            - "peoplesmarkets.media.v1.MediaService"
-            - "peoplesmarkets.media.v1.MediaSubscriptionService"
-        - name: stripe-webhooks
-          database: stripe_webhooks
-          database_user: stripe_webhooks_user
-          use_ingress_gateway: true
-          http_services:
-            - "stripe-webhooks/"
-        - name: report
-          database: report
-          database_user: report_user
-          use_ingress_gateway: true
-          grpc_services:
-            - "peoplesmarkets.report.v1.ReportService"
+        - name: websites
+        - name: commerce_v2

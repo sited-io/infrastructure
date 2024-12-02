@@ -1,0 +1,5 @@
+---
+- hosts: postgres
+  become: true
+  roles:
+    - postgres

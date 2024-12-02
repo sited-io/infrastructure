@@ -1,0 +1,16 @@
+---
+- import_playbook: install.yaml
+  tags:
+    - install
+
+- import_playbook: configure.yaml
+  tags:
+    - configure
+
+- import_playbook: consul.yaml
+  tags:
+    - consul
+
+- import_playbook: credentials.yaml
+  tags:
+    - credentials

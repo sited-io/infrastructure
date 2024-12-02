@@ -1,7 +1,6 @@
 ---
 # @meta description: >
 # Requires [Vault](../../vault/) to be run in order to use consul secret engine
-#
 # - Manually bootstrap ACL after configuration and save bootstrap token to Vault
 # - Enable [consul secret engine](https://developer.hashicorp.com/vault/docs/secrets/consul) on Vault
 # - Register Vault to Consul
@@ -17,6 +16,32 @@
     owner: consul
     group: consul
     mode: 0775
+
+- name: Check ACL config file exists
+  ansible.builtin.stat:
+    path: "{{ consul.config_dir }}/server.acl.hcl"
+  register: server_acl_exists
+
+- name: Ensure ACL config if not exists
+  ansible.builtin.copy:
+    src: default-server.acl.hcl
+    dest: "{{ consul.config_dir }}/server.acl.hcl"
+    owner: consul
+    group: consul
+    mode: "664"
+  when: not server_acl_exists.stat.exists and inventory_hostname in groups.consul_servers
+
+- name: Restart consul service
+  throttle: 2
+  ansible.builtin.service:
+    name: consul
+    state: restarted
+  when: not server_acl_exists.stat.exists and inventory_hostname in groups.consul_servers
+
+- name: Wait
+  ansible.builtin.pause:
+    seconds: 10
+  when: not server_acl_exists.stat.exists
 
 - name: Prepare Consul ACL policies and tokens on Vault
   run_once: true
@@ -35,12 +60,12 @@
 
     - name: Manually initialize ACL on consul server
       ansible.builtin.pause:
-        prompt: Login to one consul server and run 'consul acl bootstrap' save SecretID as 'token' to '/root/consul/bootstrap_token'
+        prompt: Login to one consul server and run 'consul acl bootstrap' save SecretID as 'token' to '/consul/config/bootstrap_token'
 
     - name: Get consul bootstrap token from vault
       ansible.builtin.command: |
         vault kv get -mount=kv2 -field=token \
-          /root/consul/bootstrap_token
+          /consul/config/bootstrap_token
       register: bootstrap_token_out
 
     - name: Ensure consul secret engine is enabled on vault
@@ -93,7 +118,7 @@
     group: vault
     mode: "664"
   when: inventory_hostname in groups.vault
-  notify: Vault Restarted
+  notify: Vault Reloaded
 
 - name: Copy server ACL configuration
   ansible.builtin.template:

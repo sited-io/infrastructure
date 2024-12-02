@@ -1,0 +1,14 @@
+{
+  "Kind": "service-intentions",
+  "Name": "postgres-sql",
+  "Sources": [
+    {
+      "Action": "allow",
+      "Name": "postgres-sql-gateway"
+    },
+    {
+      "Action": "allow",
+      "Name": "commerce-v2-api"
+    }
+  ]
+}

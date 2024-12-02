@@ -7,13 +7,50 @@
 
 - ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
 
-- name: Ensure consul config directory
+- name: Ensure local directory empty
+  run_once: true
+  delegate_to: localhost
+  become: false
   ansible.builtin.file:
-    path: "{{ consul.config_dir }}"
-    state: directory
+    path: /tmp/consul/configure/local.keyring
+    state: absent
+
+- name: Check if keyring file exists
+  run_once: true
+  delegate_to: "{{ groups.consul_servers[0] }}"
+  ansible.builtin.stat:
+    path: /var/lib/consul/serf/local.keyring
+  register: keyring_file_exists
+
+- name: Get keyring if exists
+  run_once: true
+  delegate_to: "{{ groups.consul_servers[0] }}"
+  when: keyring_file_exists.stat.exists
+  ansible.builtin.fetch:
+    src: /var/lib/consul/serf/local.keyring
+    dest: /tmp/consul/configure/local.keyring
+    flat: true
+
+- name: Copy keyring file to all agents
+  when: keyring_file_exists.stat.exists
+  ansible.builtin.copy:
+    src: /tmp/consul/configure/local.keyring
+    dest: /var/lib/consul/serf/local.keyring
     owner: consul
     group: consul
-    mode: "774"
+    mode: "0600"
+  register: keyring_file_updated
+
+- name: Restart Consul if keyring updated
+  when: keyring_file_updated.changed
+  ansible.builtin.service:
+    name: consul
+    state: restarted
+
+- name: Wait if consul restarted
+  when: keyring_file_updated.changed
+  ansible.builtin.pause:
+    seconds: 10
 
 - run_once: true
   delegate_to: localhost
@@ -45,31 +82,11 @@
         vault kv put -mount=kv2 /consul/config/encryption \
           key={{ gossip_key }}
 
-- ansible.builtin.file:
-    path: "{{ consul.config_dir }}/server.gossip.hcl"
-    state: absent
-
-- name: Copy server gossip configuration
+- name: Copy gossip configuration
   ansible.builtin.template:
     src: gossip.hcl.j2
     dest: "{{ consul.config_dir }}/gossip.hcl"
     owner: consul
     group: consul
     mode: "440"
-
-- name: Restart consul service
-  ansible.builtin.service:
-    name: consul
-    state: restarted
-  when: inventory_hostname in groups.consul_servers
-
-- name: Wait
-  ansible.builtin.pause:
-    seconds: 20
-
-- name: Restart consul service
-  throttle: 2
-  ansible.builtin.service:
-    name: consul
-    state: restarted
-  when: inventory_hostname in groups.consul_clients
+  notify: Consul Restarted

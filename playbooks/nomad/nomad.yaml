@@ -8,7 +8,7 @@
   import_playbook: configure.yaml
   tags:
     - configure
-  
+
 - name: Integrate with consul
   import_playbook: consul.yaml
   tags:
@@ -24,7 +24,17 @@
   tags:
     - vault
 
-- name: Configure mTLS
-  import_playbook: tls.yaml
+# - name: Configure mTLS
+#   import_playbook: tls.yaml
+#   tags:
+#     - tls
+
+- name: Configure PKI for Nomad in vault
+  import_playbook: ssl_pki.yaml
   tags:
-    - tls
+    - ssl_pki
+
+- name: Update Nomad ssl certificates
+  import_playbook: ssl_update.yaml
+  tags:
+    - ssl_update

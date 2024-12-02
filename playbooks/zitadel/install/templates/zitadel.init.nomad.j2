@@ -14,8 +14,8 @@ job "zitadel-init" {
         sidecar_service {
           proxy {
             upstreams {
-              destination_name = "cockroach-sql"
-              local_bind_port = {{ cockroach.ports.sql }}
+              destination_name = "postgres-sql"
+              local_bind_port = {{ postgres.ports.sql }}
             }
           }
         }
@@ -36,20 +36,20 @@ job "zitadel-init" {
         right_delimiter = "]]"
         data = <<EOF
 Database:
-  cockroach:
+  postgres:
     Host: [[ env "NOMAD_UPSTREAM_IP_cockroach-sql" ]]
     Port: [[ env "NOMAD_UPSTREAM_PORT_cockroach-sql" ]]
     Database: zitadel
-    MaxOpenConns: 20
-    MaxConnLifetime: 30m
-    MaxConnIdleTime: 30m
-    Options: ""
-    Admin:
-      Username: zitadel_admin
-      Password: "[[ with secret "database/static-creds/zitadel_admin" ]][[ .Data.password ]][[ end ]]"
+    MaxOpenConns: 15
+    MaxIdleConns: 10
+    MaxConnLifetime: 1h
+    MaxConnIdleTime: 5m
+    Options:
     User:
       Username: zitadel_user
       Password: "[[ with secret "database/static-creds/zitadel_user" ]][[ .Data.password ]][[ end ]]"
+      SSL:
+        Mode: disable
 EOF
       }
 

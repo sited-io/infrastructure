@@ -1,0 +1,13 @@
+services {
+  name = "postgres-sql"
+
+  port = {{ postgres.ports.sql }}
+
+  tags = ["postgres"]
+
+  token = "{{ consul_token }}"
+
+  connect {
+    sidecar_service {}
+  }
+}

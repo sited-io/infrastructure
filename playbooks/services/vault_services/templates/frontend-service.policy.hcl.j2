@@ -1,0 +1,7 @@
+path "kv2/data/services" {
+  capabilities = ["read"]
+}
+
+path "kv2/data/services/{{ item.name }}" {
+  capabilities = ["read"]
+}

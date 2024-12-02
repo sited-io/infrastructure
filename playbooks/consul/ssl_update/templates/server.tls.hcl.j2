@@ -1,0 +1,21 @@
+## TLS Encryption (requires cert files to be present on the server nodes)
+tls {
+  defaults {
+    ca_file   = "{{ consul.certs_dir }}/consul-agent-ca.pem"
+    cert_file = "{{ consul.certs_dir }}/{{ data_center }}-server-{{ consul.domain }}.pem"
+    key_file  = "{{ consul.certs_dir }}/{{ data_center }}-server-{{ consul.domain }}-key.pem"
+
+    verify_outgoing        = true
+    verify_incoming        = true
+  }
+  https {
+    verify_incoming        = false
+  }
+  internal_rpc {
+    verify_server_hostname = true
+  }
+}
+
+auto_encrypt {
+  allow_tls = true
+}

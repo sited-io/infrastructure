@@ -1,0 +1,91 @@
+---
+# @meta description: >
+# Requires [Vault](../../vault/) to be run in order to use PKI
+# - Get certificates from vault and configure to nomad angents
+# @end
+#
+# @todo monitoring: Monitor certificate expiry and alert if certificates did not get refreshed within threshold
+
+- ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
+
+- delegate_to: localhost
+  become: false
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+  block:
+    - ansible.builtin.set_fact:
+        common_name: "server.{{ data_center }}.nomad"
+        alt_names: nomad.service.consul
+      when: inventory_hostname in groups.nomad_servers
+    - ansible.builtin.set_fact:
+        common_name: "client.{{ data_center }}.nomad"
+        alt_names: nomad-client.service.consul
+      when: inventory_hostname in groups.nomad_clients
+
+    - name: Get server certificates
+      ansible.builtin.command: |
+        vault write -format=json \
+          pki-int/nomad/issue/nomad-{{ data_center }} \
+          common_name={{ common_name }} \
+          alt_names={{ alt_names }} \
+          ip_sans={{ ansible_eth1.ipv4.address }} \
+          ttl=720h
+      register: certificate_out
+
+- name: Ensure certs directory exists
+  ansible.builtin.file:
+    path: "{{ nomad.certs_dir }}"
+    state: directory
+    owner: nomad
+    group: nomad
+    mode: 0755
+
+- name: Save CA
+  ansible.builtin.copy:
+    content: "{{ certificate_out.stdout | from_json | community.general.json_query('data.issuing_ca') }}"
+    dest: "{{ nomad.certs_dir }}/nomad-agent-ca.pem"
+  notify: Nomad Reloaded
+
+- name: Save certificate
+  ansible.builtin.copy:
+    content: "{{ certificate_out.stdout | from_json | community.general.json_query('data.certificate') }}"
+    dest: "{{ nomad.certs_dir }}/nomad-agent-cert.pem"
+  notify: Nomad Reloaded
+
+- name: Save certificate key
+  ansible.builtin.copy:
+    content: "{{ certificate_out.stdout | from_json | community.general.json_query('data.private_key') }}"
+    dest: "{{ nomad.certs_dir }}/nomad-agent-key.pem"
+  notify: Nomad Reloaded
+
+- name: Copy nomad tls configurations
+  ansible.builtin.template:
+    src: agent.tls.hcl.j2
+    dest: "{{ nomad.config_dir }}/agent.tls.hcl"
+    owner: nomad
+    group: nomad
+    mode: 0664
+  notify: Nomad Reloaded
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/nomad/tls/nomad
+        state: directory
+
+    - name: Get nomad SSL CA
+      ansible.builtin.get_url:
+        url: "{{ vault.url }}/v1/pki-int/nomad/ca/pem"
+        dest: "/tmp/nomad/tls/nomad/nomad-ca.pem"
+
+    - name: Configure nomad secret engine with nomad CA
+      ansible.builtin.command: >-
+        vault write nomad/config/access
+          ca_cert=@/tmp/nomad/tls/nomad/nomad-ca.pem

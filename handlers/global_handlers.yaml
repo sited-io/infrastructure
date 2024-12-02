@@ -5,6 +5,12 @@
     name: vault
     state: restarted
 
+- name: Vault Reloaded
+  throttle: 1
+  ansible.builtin.service:
+    name: vault
+    state: reloaded
+
 - name: Consul Restarted
   throttle: 2
   ansible.builtin.service:

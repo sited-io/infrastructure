@@ -43,24 +43,6 @@
         mode: "440"
       notify: nginx Restarted
 
-    - name: Copy Cloudflare origin ca for custom domain
-      ansible.builtin.copy:
-        content: "{{ public_gateway.custom_origin_certificate }}"
-        dest: "{{ public_gateway.config_dir }}/custom_origin.pem"
-        owner: root
-        group: www-data
-        mode: "640"
-      notify: nginx Restarted
-
-    - name: Copy Cloudflare origin ca key for custom domain
-      ansible.builtin.copy:
-        content: "{{ public_gateway.custom_origin_certificate_key }}"
-        dest: "{{ public_gateway.config_dir }}/custom_origin.key"
-        owner: root
-        group: www-data
-        mode: "440"
-      notify: nginx Restarted
-
     - name: Copy health endpoint config
       ansible.builtin.template:
         src: health.conf.j2

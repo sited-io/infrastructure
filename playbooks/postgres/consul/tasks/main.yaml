@@ -1,0 +1,107 @@
+---
+# @meta description: >
+# Requires [Vault](../../vault/) to be run
+#
+# Requires [Consul](../../consul/) to be run
+#
+# Requires [Nomad](../../nomad/) to be run
+#
+# - Install and configure [envoy](https://www.envoyproxy.io/docs) to run as sidecar proxy for postgres services
+# - Deploy ingress gateway for postgres sql service to nomad
+# @end
+
+- ansible.builtin.import_tasks: ../../common-tasks/envoy/envoy.yaml
+
+- ansible.builtin.import_tasks: ../../common-tasks/consul_login/consul_login.yaml
+
+- ansible.builtin.import_tasks: ../../common-tasks/nomad_login/nomad_login.yaml
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+    CONSUL_HTTP_ADDR: "{{ consul.url }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_token }}"
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/postgres/consul
+        state: directory
+
+    - name: Copy acl policy to working directory
+      ansible.builtin.copy:
+        src: acl_register_postgres_policy.hcl
+        dest: /tmp/postgres/consul/acl_register_postgres_policy.hcl
+
+    - name: Create register postgres policy
+      ansible.builtin.command: |
+        consul acl policy create \
+          -name register_postgres_policy \
+          -rules @/tmp/postgres/consul/acl_register_postgres_policy.hcl
+      register: create_policy_out
+      failed_when: create_policy_out.rc != 0 and 'already exists' not in create_policy_out.stderr
+
+    - name: Update register postgres policy if exists
+      ansible.builtin.command: |
+        consul acl policy update \
+          -name register_postgres_policy \
+          -rules @/tmp/postgres/consul/acl_register_postgres_policy.hcl
+      when: create_policy_out.rc != 0 and 'already exists' in create_policy_out.stderr
+
+    - name: Create vault role for register postgres policy
+      ansible.builtin.command: |
+        vault write consul/roles/register_postgres_role \
+          policies=register_postgres_policy
+
+    - name: Get register postgres token
+      ansible.builtin.command: |
+        vault read -field=token consul/creds/register_postgres_role
+      register: token_out
+
+    - name: Get consul connect root ca
+      ansible.builtin.get_url:
+        url: "{{ consul.url }}/v1/connect/ca/roots"
+        dest: /tmp/postgres/consul/connect-root-ca.json
+
+    - name: Read connect root ca
+      ansible.builtin.slurp:
+        path: /tmp/postgres/consul/connect-root-ca.json
+      register: connect_ca_out
+
+- ansible.builtin.set_fact:
+    connect_root_ca: "{{ connect_ca_out.content | b64decode | from_json | json_query('Roots[0].RootCert') }}"
+    consul_token: "{{ token_out.stdout }}"
+
+- name: Copy connect root ca to consul certs directory
+  ansible.builtin.copy:
+    content: "{{ connect_root_ca }}"
+    dest: "{{ consul.certs_dir }}/connect.root.ca.crt"
+    owner: consul
+    group: consul
+    mode: "444"
+
+- name: Copy postgres envoy proxy env
+  ansible.builtin.template:
+    src: envoy-sidecar@.env.j2
+    dest: "{{ systemd_dir }}/envoy-sidecar@postgres-sql.env"
+    owner: root
+    group: root
+    mode: "440"
+
+- name: Copy postgres service file
+  ansible.builtin.template:
+    src: postgres.service.hcl.j2
+    dest: "{{ consul.config_dir }}/postgres.service.hcl"
+    owner: consul
+    group: consul
+    mode: "664"
+  register: postgres_service_file_changed
+  notify: envoy-sidecar for postgres-sql
+
+- name: Restart consul if postgres.service changed
+  ansible.builtin.service:
+    name: consul
+    state: restarted
+  when: postgres_service_file_changed.changed

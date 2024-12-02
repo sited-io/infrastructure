@@ -1,0 +1,12 @@
+---
+- name: Unseal vault
+  ansible.builtin.command: |
+    vault operator unseal 
+      -address "https://{{ ansible_eth1.ipv4.address }}:8200" -ca-cert /opt/vault/tls/ca.crt
+      -client-cert /opt/vault/tls/client.crt
+      -client-key /opt/vault/tls/client.key
+      {{ secrets.vault[item] }}
+  with_items:
+    - recovery_key_1
+    - recovery_key_2
+    - recovery_key_3

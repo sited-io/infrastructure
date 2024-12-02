@@ -3,14 +3,14 @@ all:
   vars:
     consul:
       domain: consul
-      ui_host: consul-dev.peoplesmarkets.com
-      url: https://consul-dev.peoplesmarkets.com
+      ui_host: consul-dev-sited-io.adrian-studio.com
+      url: https://consul-dev-sited-io.adrian-studio.com
       data_dir: /var/lib/consul
       config_dir: /etc/consul.d
       certs_dir: /etc/consul.d/certs
       policy_dir: /etc/consul.d/policies
       dns_recursor: 1.1.1.1 # Cloudflare
-      envoy_version: "1.26.4"
+      envoy_version: "1.31.3"
       ports:
         dns: 8600
         http: 8500
@@ -28,16 +28,12 @@ all:
       children:
         consul_servers:
           hosts:
-            euliania-dev.peoplesmarkets.com:
-            eudea-dev.peoplesmarkets.com:
-            eurelia-dev.peoplesmarkets.com:
+            josie.adrian-studio.com:
+            luther.adrian-studio.com:
+            nina.adrian-studio.com:
         consul_clients:
           hosts:
-            euria-dev.peoplesmarkets.com:
-            eudokia-dev.peoplesmarkets.com:
-            eudel-dev.peoplesmarkets.com:
-            eunice-dev.peoplesmarkets.com:
-            euphoria-dev.peoplesmarkets.com:
-            euri-dev.peoplesmarkets.com:
-            eugene-dev.peoplesmarkets.com:
-            euclid-dev.peoplesmarkets.com:
+            # workers
+            rocky.adrian-studio.com:
+            # postgres
+            ronda.adrian-studio.com:

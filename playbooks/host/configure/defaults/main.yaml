@@ -1,3 +1,0 @@
----
-# @var private_network_range:description: Ip range that will be allowed by firewall.
-private_network_range: 10.0.0.0/8

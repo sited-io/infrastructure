@@ -70,3 +70,11 @@ Production environment
 ```sh
 EDITOR='code --wait' ansible-vault edit --vault-password-file=.prod_ansible_vault_pass vaults/prod.yaml
 ```
+
+## Host systems
+
+### cloud-init script
+
+```sh
+echo 'admin ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+```

@@ -10,20 +10,14 @@
   ansible.builtin.file:
     path: "{{ vault.config_dir }}"
     state: directory
-  notify: Vault Restarted
-
-- name: Ensure certificate directory
-  ansible.builtin.file:
-    path: "{{ vault.certs_dir }}"
-    state: absent
-  notify: Vault Restarted
+  notify: Vault Reloaded
 
 - name: Ensure certificate directory
   ansible.builtin.file:
     path: "{{ vault.certs_dir }}"
     state: directory
     mode: 0775
-  notify: Vault Restarted
+  notify: Vault Reloaded
 
 - name: Copy CA certificate
   ansible.builtin.copy:
@@ -32,7 +26,7 @@
     owner: root
     group: root
     mode: 0644
-  notify: Vault Restarted
+  notify: Vault Reloaded
 
 - name: Copy vault certificate
   ansible.builtin.copy:
@@ -41,7 +35,7 @@
     owner: root
     group: root
     mode: 0644
-  notify: Vault Restarted
+  notify: Vault Reloaded
 
 - name: Copy vault certificate key
   ansible.builtin.copy:
@@ -50,16 +44,7 @@
     owner: root
     group: vault
     mode: 0640
-  notify: Vault Restarted
-
-- name: Copy GCP service account credentials
-  ansible.builtin.copy:
-    content: "{{ secrets.vault.gcp_kms_service_account_key }}"
-    dest: "{{ vault.config_dir }}/gcp_credentials.json"
-    owner: root
-    group: vault
-    mode: 0640
-  notify: Vault Restarted
+  notify: Vault Reloaded
 
 - name: Copy vault config file
   ansible.builtin.template:
@@ -70,12 +55,16 @@
     mode: 0664
   notify: Vault Restarted
 
-# sudo vault operator init --address https://<private-ip-address>:8200 -ca-cert /opt/vault/tls/ca.crt -client-cert /opt/vault/tls/client.crt -client-key /opt/vault/tls/client.key
-# sudo vault operator init --address https://10.0.0.9:8200 -ca-cert /opt/vault/tls/ca.crt -client-cert /opt/vault/tls/client.crt -client-key /opt/vault/tls/client.key
-# sudo vault operator init --address https://10.0.4.4:8200 -ca-cert /opt/vault/tls/ca.crt -client-cert /opt/vault/tls/client.crt -client-key /opt/vault/tls/client.key
+# save token as "secrets.vault.initial_root_token"
+- when: secrets.vault.initial_root_token == ""
+  block:
+    - name: Restart Vault
+      ansible.builtin.service:
+        name: vault
+        state: restarted
 
-# save token as "initial_root_token"
+    - name: "End play if vault was not initialized"
+      debug:
+        msg: "Login to one vault server and run the init comman. Save restore keys to secrets file. Save initial root token to 'secrets.vault.initial_root_token'."
 
-- name: Manually initialize vault if not initialized yet
-  ansible.builtin.pause:
-    prompt: Login to one vault server and run the init comman. Save restore keys to secrets file. Save initial root token to 'secrets.vault.initial_root_token'.
+    - fail:

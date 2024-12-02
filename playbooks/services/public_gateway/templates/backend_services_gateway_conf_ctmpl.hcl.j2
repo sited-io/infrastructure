@@ -1,0 +1,15 @@
+template {
+  source          = "{{ consul_template.data_dir }}/backend_services_gateway.conf.tpl"
+  destination     = "{{ public_gateway.sites_dir }}/backend_services_gateway.conf"
+  left_delimiter  = "[["
+  right_delimiter = "]]"
+
+  user  = "www-data"
+  group = "www-data"
+  perms = 0440
+
+  exec {
+    command = ["systemctl", "reload", "nginx"]
+  }
+}
+

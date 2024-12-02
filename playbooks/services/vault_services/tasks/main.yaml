@@ -19,13 +19,25 @@
         path: /tmp/services/vault_serivces/
         state: directory
 
-    - name: Copy service roles to working directory
+    - name: Copy frontend service roles to working directory
       ansible.builtin.template:
-        src: service.policy.hcl.j2
+        src: frontend-service.policy.hcl.j2
+        dest: /tmp/services/vault_serivces/service-{{ item.name }}.hcl
+      with_items: "{{ services.frontend }}"
+
+    - name: Create frontend service roles on vault
+      ansible.builtin.command: >-
+        vault policy write service-{{ item.name }}
+          /tmp/services/vault_serivces/service-{{ item.name }}.hcl
+      with_items: "{{ services.frontend }}"
+
+    - name: Copy backend service roles to working directory
+      ansible.builtin.template:
+        src: backend-service.policy.hcl.j2
         dest: /tmp/services/vault_serivces/service-{{ item.name }}.hcl
       with_items: "{{ services.backend }}"
 
-    - name: Create service roles on vault
+    - name: Create backend service roles on vault
       ansible.builtin.command: >-
         vault policy write service-{{ item.name }}
           /tmp/services/vault_serivces/service-{{ item.name }}.hcl

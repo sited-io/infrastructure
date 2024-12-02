@@ -48,12 +48,12 @@
 
     - name: Manually initialize ACL on nomad server
       ansible.builtin.pause:
-        prompt: Login to one nomad server and run 'nomad acl bootstrap' save SecretID as 'token' to '/root/nomad/bootstrap_token'
+        prompt: Login to one nomad server and run 'nomad acl bootstrap' save SecretID as 'token' to '/nomad/config/bootstrap_token'
 
     - name: Get nomad bootstrap token from vault
       ansible.builtin.command: |
         vault kv get -mount=kv2 -field=token \
-          /root/nomad/bootstrap_token
+          /nomad/config/bootstrap_token
       register: bootstrap_token_out
 
     - name: Enable nomad secret engine on vault

@@ -2,8 +2,8 @@
 all:
   vars:
     nomad:
-      ui_host: nomad-dev.peoplesmarkets.com
-      url: https://nomad-dev.peoplesmarkets.com
+      ui_host: nomad-dev-sited-io.adrian-studio.com
+      url: https://nomad-dev-sited-io.adrian-studio.com
       consul_dns_domain: nomad.service.consul
       data_dir: /var/lib/nomad
       config_dir: /etc/nomad.d
@@ -22,13 +22,9 @@ all:
       children:
         nomad_servers:
           hosts:
-            euliania-dev.peoplesmarkets.com:
-            eudea-dev.peoplesmarkets.com:
-            eurelia-dev.peoplesmarkets.com:
+            josie.adrian-studio.com:
+            luther.adrian-studio.com:
+            nina.adrian-studio.com:
         nomad_clients:
           hosts:
-            euria-dev.peoplesmarkets.com:
-            eudokia-dev.peoplesmarkets.com:
-            eudel-dev.peoplesmarkets.com:
-            eunice-dev.peoplesmarkets.com:
-            euphoria-dev.peoplesmarkets.com:
+            rocky.adrian-studio.com:

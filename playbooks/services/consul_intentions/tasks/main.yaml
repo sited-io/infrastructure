@@ -22,74 +22,11 @@
     - ansible.builtin.set_fact:
         gateway_services: "{{ services.backend | selectattr('use_ingress_gateway', 'true') }}"
 
-    - name: Copy zitadel intentions configurations to working directory
+    - name: Copy postgres intentions configurations to working directory
       ansible.builtin.copy:
-        src: zitadel_intention.json
-        dest: /tmp/services/consul_services/zitadel_intention.json
+        src: postgres_intention.json
+        dest: /tmp/services/consul_services/postgres_intention.json
 
-    - name: Create consul intentions for zitadel
+    - name: Create consul intentions for postgres
       ansible.builtin.command: >-
-        consul config write /tmp/services/consul_services/zitadel_intention.json
-
-    - name: Copy cockroach intentions configurations to working directory
-      ansible.builtin.copy:
-        src: cockroach_intention.json
-        dest: /tmp/services/consul_services/cockroach_intention.json
-
-    - name: Create consul intentions for cockroach
-      ansible.builtin.command: >-
-        consul config write /tmp/services/consul_services/cockroach_intention.json
-
-    - name: Copy commerce intentions configurations to working directory
-      ansible.builtin.copy:
-        src: commerce_intention.json
-        dest: /tmp/services/consul_services/commerce_intention.json
-
-    - name: Create consul intentions for commerce
-      ansible.builtin.command: >-
-        consul config write /tmp/services/consul_services/commerce_intention.json
-
-    - name: Copy media intentions configurations to working directory
-      ansible.builtin.copy:
-        src: media_intention.json
-        dest: /tmp/services/consul_services/media_intention.json
-
-    - name: Create consul intentions for media
-      ansible.builtin.command: >-
-        consul config write /tmp/services/consul_services/media_intention.json
-
-    - name: Copy payment intentions configurations to working directory
-      ansible.builtin.copy:
-        src: payment_intention.json
-        dest: /tmp/services/consul_services/payment_intention.json
-
-    - name: Create consul intentions for payment
-      ansible.builtin.command: >-
-        consul config write /tmp/services/consul_services/payment_intention.json
-
-    - name: Copy report intentions configurations to working directory
-      ansible.builtin.copy:
-        src: report_intention.json
-        dest: /tmp/services/consul_services/report_intention.json
-
-    - name: Create consul intentions for report
-      ansible.builtin.command: >-
-        consul config write /tmp/services/consul_services/report_intention.json
-
-    - name: Copy stripe-webhooks intentions configurations to working directory
-      ansible.builtin.copy:
-        src: stripe-webhooks_intention.json
-        dest: /tmp/services/consul_services/stripe-webhooks_intention.json
-
-    - name: Create consul intentions for stripe-webhooks
-      ansible.builtin.command: >-
-        consul config write /tmp/services/consul_services/stripe-webhooks_intention.json
-
-    - name: Copy services-proxy intentions configurations to working directory
-      ansible.builtin.copy:
-        src: services-proxy_intention.json
-        dest: /tmp/services/consul_services/services-proxy_intention.json
-
-    - name: Create consul intentions for services-proxy
-      ansible.builtin.command: >-
-        consul config write /tmp/services/consul_services/services-proxy_intention.json
+        consul config write /tmp/services/consul_services/postgres_intention.json

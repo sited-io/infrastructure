@@ -82,3 +82,6 @@
               ssl_ca_certificate_key: '{{ ssl_ca_certificate_key }}'
               ssl_certificate: '{{ ssl_certificate }}'
               ssl_certificate_key: '{{ ssl_certificate_key }}'
+
+- fail:
+  when: secrets.vault.ssl_ca_certificate_key == "" or secrets.vault.ssl_ca_certificate == "" or secrets.vault.ssl_certificate_key == "" or secrets.vault.ssl_certificate == ""

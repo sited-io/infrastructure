@@ -4,7 +4,7 @@ datacenter  = "{{ data_center }}"
 client_addr = "{{ localhost_ip }} {{ ansible_eth1.ipv4.address }}"
 bind_addr   = "{{ ansible_eth1.ipv4.address }}"
 
-retry_join = {{ groups.consul_servers | difference([inventory_hostname]) | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address']) | to_json }}
+retry_join = {{ groups.consul_servers | difference([inventory_hostname]) | map('extract', hostvars, ['ansible_eth1', 'ipv4', 'address']) | sort | to_json }}
 
 # Logging
 log_level = "INFO"

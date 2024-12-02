@@ -1,0 +1,29 @@
+---
+- ansible.builtin.import_tasks: ../../common-tasks/ufw/ufw.yaml
+
+- name: Configure firewall allow http 5432
+  community.general.ufw:
+    rule: allow
+    port: "5432"
+    proto: tcp
+
+- name: Download PostgreSQL key and add it to system keyring
+  ansible.builtin.apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: Add pgdg repo to sources list
+  ansible.builtin.apt_repository:
+    repo: deb http://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main
+    state: present
+
+- name: Install PostgreSQL
+  ansible.builtin.apt:
+    name: postgresql
+    state: present
+    update_cache: true
+
+- name: Install psycopg
+  ansible.builtin.apt:
+    name: python3-psycopg2
+    state: latest
