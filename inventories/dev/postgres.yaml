@@ -2,13 +2,10 @@
 all:
   vars:
     postgres:
+      allow_public_access: true
       ports:
         sql: 5432
         external_sql: 5433
-      databases:
-        - name: zitadel
-          users:
-            - zitadel_user
   children:
     postgres:
       hosts:

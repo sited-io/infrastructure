@@ -1,0 +1,9 @@
+---
+all:
+  vars:
+    localhost_ip: "127.0.0.1"
+
+  children:
+    cicd_runners:
+      hosts:
+        barry.adrian-studio.com:

@@ -8,7 +8,32 @@
     },
     {
       "Action": "allow",
+      "Name": "websites-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "commerce-api"
+    },
+
+    {
+      "Action": "allow",
       "Name": "commerce-v2-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "payment-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "media-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "stripe_webhooks-api"
+    },
+    {
+      "Action": "allow",
+      "Name": "debian-debug-debian-debug"
     }
   ]
 }

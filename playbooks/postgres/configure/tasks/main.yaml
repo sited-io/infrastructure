@@ -14,7 +14,7 @@
 - name: Set listen address
   community.postgresql.postgresql_set:
     name: listen_addresses
-    value: "localhost, {{ ansible_eth1.ipv4.address }}"
+    value: "{% if postgres.allow_public_access %}0.0.0.0{% else %}{{ localhost_ip }}, {{ ansible_eth1.ipv4.address }}{% endif %}"
     port: "{{ postgres.ports.sql }}"
   notify: Restart Postgres
 

@@ -1,0 +1,37 @@
+job "debian-debug" {
+  datacenters = ["{{ data_center }}"]
+  type = "service"
+
+  group "debian-debug" {
+    count = 1
+
+    network {
+      mode = "bridge"
+    }
+
+    service {
+      connect {
+        sidecar_service {
+          proxy {
+            upstreams {
+              destination_name = "postgres-sql"
+              local_bind_port  = 5432
+            }
+          }
+        }
+      }
+    }
+
+    task "debian-debug" {
+      driver = "docker"
+
+      config {
+        image = "debian:latest"
+        command = "tail"
+        args = [
+          "-f", "/dev/null"
+        ]
+      }
+    }
+  }
+}

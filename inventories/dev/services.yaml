@@ -18,8 +18,62 @@ all:
           user: zitadel_user
         - name: websites
           user: websites_user
+        - name: commerce
+          user: commerce_user
         - name: commerce_v2
           user: commerce_v2_user
+        - name: payment
+          user: payment_user
+        - name: media
+          user: media_user
+        - name: stripe_webhooks
+          user: stripe_webhooks_user
       backend:
+        - name: reflection
+          use_ingress_gateway: true
+          grpc_services:
+            - grpc.reflection.v1.ServerReflection
+            - grpc.reflection.v1alpha.ServerReflection
         - name: websites
-        - name: commerce_v2
+          use_ingress_gateway: true
+          grpc_services:
+            - sited_io.websites.v1.WebsiteService
+            - sited_io.websites.v1.CustomizationService
+            - sited_io.websites.v1.DomainService
+            - sited_io.websites.v1.PageService
+            - sited_io.websites.v1.StaticPageService
+        - name: commerce
+          use_ingress_gateway: true
+          proxy_extra_configurations:
+            - client_max_body_size 16M;
+          grpc_services:
+            - sited_io.commerce.v1.OfferService
+            - sited_io.commerce.v1.ShopService
+            - sited_io.commerce.v1.ShopCustomizationService
+            - sited_io.commerce.v1.ShopDomainService
+            - sited_io.commerce.v1.ShippingRateService
+        - name: commerce-v2
+          use_ingress_gateway: true
+          proxy_extra_configurations:
+            - client_max_body_size 16M;
+          grpc_services:
+            - sited_io.commerce.v2.CommerceService
+        - name: payment
+          use_ingress_gateway: true
+          grpc_services:
+            - sited_io.payment.v1.StripeService
+        - name: media
+          use_ingress_gateway: true
+          proxy_extra_configurations:
+            - client_max_body_size 64M;
+          grpc_services:
+            - sited_io.media.v1.MediaService
+            - sited_io.media.v1.MediaSubscriptionService
+        - name: stripe-webhooks
+          use_ingress_gateway: true
+          http_services:
+            - stripe-webhooks/
+        - name: report
+          use_ingress_gateway: true
+          grpc_services:
+            - sited_io.report.v1.ReportService

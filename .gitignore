@@ -4,6 +4,7 @@ vaults/*
 !vaults/default.yaml
 .dev_ansible_vault_pass
 .prod_ansible_vault_pass
+.global_ansible_vault_pass
 provisioning/*/*
 !provisioning/*/main.tf
 !provisioning/*/variables.tf

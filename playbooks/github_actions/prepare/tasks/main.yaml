@@ -1,0 +1,120 @@
+---
+- name: Update Packages
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: safe
+    autoremove: true
+    autoclean: true
+
+- name: Set hostnames
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Update /etc/hosts with hostname
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+
+- ansible.builtin.import_tasks: ../../common-tasks/ufw/ufw.yaml
+
+- name: Install locales-all
+  ansible.builtin.apt:
+    name: locales-all
+    state: latest
+
+- name: Install Qemu guest agent
+  ansible.builtin.apt:
+    name: qemu-guest-agent
+    state: latest
+
+- ansible.builtin.import_tasks: ../../common-tasks/hashicorp_repository/hashicorp_repository.yaml
+
+- name: Install nomad package
+  ansible.builtin.apt:
+    name: nomad
+    state: latest
+    update_cache: true
+
+- name: Ensure nomad service is stopped and disabled
+  ansible.builtin.service:
+    name: nomad
+    state: stopped
+    enabled: false
+
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+    state: present
+
+- name: Add Docker repo to apt
+  apt_repository:
+    repo: deb https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable
+    state: present
+
+- name: Install Docker
+  apt:
+    name: "{{ packages }}"
+    state: latest
+    update_cache: true
+  vars:
+    packages:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+  notify:
+    - Docker Restarted
+
+- name: Add docker group
+  group:
+    name: docker
+    state: present
+
+- name: Add admin and nomad to docker group
+  user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  with_items:
+    - admin
+    - nomad
+
+- name: check if cargo is installed
+  become: true
+  become_user: admin
+  ansible.builtin.command: command -v cargo
+  register: cargo_exists
+  ignore_errors: yes
+
+- name: Get Rust install script
+  become: true
+  become_user: admin
+  ansible.builtin.get_url:
+    url: https://sh.rustup.rs
+    dest: /tmp/sh.rustup.rs
+    mode: "0755"
+    force: "yes"
+  when: cargo_exists is failed
+
+- name: Run rust install script
+  become: true
+  become_user: admin
+  ansible.builtin.command: /tmp/sh.rustup.rs -y
+  when: cargo_exists is failed
+
+- name: List all rust binaries
+  become: true
+  become_user: admin
+  ansible.builtin.find:
+    paths: "/home/admin/.cargo/bin/"
+  register: list_binaries_out
+
+- ansible.builtin.set_fact:
+    binary_paths: "{{ list_binaries_out.files | map(attribute='path') }}"
+
+- name: Link cargo and rustup to PATH
+  ansible.builtin.file:
+    src: "{{ item }}"
+    dest: "/usr/local/bin/{{ item.split('/') | last }}"
+    state: link
+  with_items: "{{ binary_paths }}"

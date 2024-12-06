@@ -1,0 +1,19 @@
+---
+- ansible.builtin.import_tasks: ../../common-tasks/nomad_login/nomad_login.yaml
+
+- name: Ensure working directory
+  ansible.builtin.file:
+    path: /tmp/nomad/debug
+    state: directory
+
+- name: Prepare debian debug job file
+  ansible.builtin.template:
+    src: debian-debug.nomad.j2
+    dest: /tmp/nomad/debug/debian-debug.nomad
+
+- name: Deploy debian debug nomad job
+  ansible.builtin.command: |
+    nomad job run \
+      -address={{ nomad.url }} \
+      -token={{ nomad_token }} \
+      /tmp/nomad/debug/debian-debug.nomad
