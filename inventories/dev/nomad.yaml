@@ -2,8 +2,8 @@
 all:
   vars:
     nomad:
-      ui_host: nomad-dev-sited-io.adrian-studio.com
-      url: https://nomad-dev-sited-io.adrian-studio.com
+      ui_host: dev-nomad-sited-io.adrian-studio.com
+      url: https://dev-nomad-sited-io.adrian-studio.com
       consul_dns_domain: nomad.service.consul
       data_dir: /var/lib/nomad
       config_dir: /etc/nomad.d
@@ -22,9 +22,10 @@ all:
       children:
         nomad_servers:
           hosts:
-            josie.adrian-studio.com:
-            luther.adrian-studio.com:
-            nina.adrian-studio.com:
+            dev-carey.adrian-studio.com:
+            dev-elli.adrian-studio.com:
+            dev-john.adrian-studio.com:
         nomad_clients:
           hosts:
-            rocky.adrian-studio.com:
+            dev-josie.adrian-studio.com:
+            dev-rocky.adrian-studio.com:

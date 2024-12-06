@@ -118,7 +118,7 @@
     group: vault
     mode: "664"
   when: inventory_hostname in groups.vault
-  notify: Vault Reloaded
+  notify: Vault Restarted
 
 - name: Copy server ACL configuration
   ansible.builtin.template:

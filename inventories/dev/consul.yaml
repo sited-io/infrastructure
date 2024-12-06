@@ -3,8 +3,8 @@ all:
   vars:
     consul:
       domain: consul
-      ui_host: consul-dev-sited-io.adrian-studio.com
-      url: https://consul-dev-sited-io.adrian-studio.com
+      ui_host: dev-consul-sited-io.adrian-studio.com
+      url: https://dev-consul-sited-io.adrian-studio.com
       data_dir: /var/lib/consul
       config_dir: /etc/consul.d
       certs_dir: /etc/consul.d/certs
@@ -28,12 +28,13 @@ all:
       children:
         consul_servers:
           hosts:
-            josie.adrian-studio.com:
-            luther.adrian-studio.com:
-            nina.adrian-studio.com:
+            dev-carey.adrian-studio.com:
+            dev-elli.adrian-studio.com:
+            dev-john.adrian-studio.com:
         consul_clients:
           hosts:
             # workers
-            rocky.adrian-studio.com:
+            dev-josie.adrian-studio.com:
+            dev-rocky.adrian-studio.com:
             # postgres
-            ronda.adrian-studio.com:
+            dev-ronda.adrian-studio.com:

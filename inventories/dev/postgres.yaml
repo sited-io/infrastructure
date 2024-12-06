@@ -9,4 +9,4 @@ all:
   children:
     postgres:
       hosts:
-        ronda.adrian-studio.com:
+        dev-ronda.adrian-studio.com:

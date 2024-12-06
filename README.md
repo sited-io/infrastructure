@@ -1,5 +1,52 @@
 # peoplesmarkets.com - Infrastructure
 
+## Playbooks
+
+### Service Cluster
+
+#### [1: Configuring host systems](./playbooks/host/README.md)
+
+#### [2: Public Gateway (proxy)](./playbooks/public_gateway/README.md)
+
+#### [3: Vault](./playbooks/vault/README.md)
+
+#### [4: Consul](./playbooks/consul/README.md)
+
+#### [5: Nomad](./playbooks/nomad/README.md)
+
+### Databases
+
+#### [1: Postgres](./playbooks/postgres/README.md)
+
+### Services
+
+#### [1: Services](./playbooks/services/README.md)
+
+## Host system configuration
+
+### cloud-init script
+
+```sh
+echo 'admin ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+passwd --delete admin
+```
+
+## Secrets
+
+Initial secrects required for deploying vault cluster and public gateway are stored in ansible-vault encrypted yaml files.
+
+Developement environment
+
+```sh
+EDITOR='code --wait' ansible-vault edit --vault-password-file=.dev_ansible_vault_pass vaults/dev.yaml
+```
+
+Production environment
+
+```sh
+EDITOR='code --wait' ansible-vault edit --vault-password-file=.prod_ansible_vault_pass vaults/prod.yaml
+```
+
 ## Development
 
 ### Linting & static security analyser
@@ -25,56 +72,4 @@ Generate docs for all playbooks:
 
 ```sh
 ls -d playbooks/* | xargs -I {} bash -c "ansible-doctor --recursive -f {}"
-```
-
-## [Provisioning](./provisioning/)
-
-## Playbooks
-
-### Service Cluster
-
-#### [1: Configuring host systems](./playbooks/host/)
-
-#### [2: Public Gateway (proxy)](./playbooks/public_gateway/)
-
-#### [3: Vault](./playbooks/vault/)
-
-#### [4: Consul](./playbooks/consul/)
-
-#### [5: Nomad](./playbooks/nomad/)
-
-### Monitoring
-
-#### [1: Allocation logs](./playbooks/logging/)
-
-### Databases
-
-#### [1: Cockroach](./playbooks/cockroach/)
-
-### Auth
-
-#### [1: Zitadel](./playbooks/zitadel/)
-
-## Secrets
-
-Initial secrects required for deploying vault cluster and public gateway are stored in ansible-vault encrypted yaml files.
-
-Developement environment
-
-```sh
-EDITOR='code --wait' ansible-vault edit --vault-password-file=.dev_ansible_vault_pass vaults/dev.yaml
-```
-
-Production environment
-
-```sh
-EDITOR='code --wait' ansible-vault edit --vault-password-file=.prod_ansible_vault_pass vaults/prod.yaml
-```
-
-## Host systems
-
-### cloud-init script
-
-```sh
-echo 'admin ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 ```

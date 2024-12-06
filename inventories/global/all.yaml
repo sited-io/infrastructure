@@ -6,4 +6,4 @@ all:
   children:
     cicd_runners:
       hosts:
-        barry.adrian-studio.com:
+        global-barry.adrian-studio.com:

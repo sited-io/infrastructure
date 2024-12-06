@@ -2,8 +2,8 @@
 all:
   vars:
     vault:
-      ui_host: vault-dev-sited-io.adrian-studio.com
-      url: https://vault-dev-sited-io.adrian-studio.com
+      ui_host: dev-vault-sited-io.adrian-studio.com
+      url: https://dev-vault-sited-io.adrian-studio.com
       consul_dns_domain: vault.service.consul
       certs_dir: /opt/vault/tls
       config_dir: /etc/vault.d
@@ -15,6 +15,6 @@ all:
   children:
     vault:
       hosts:
-        josie.adrian-studio.com:
-        luther.adrian-studio.com:
-        nina.adrian-studio.com:
+        dev-carey.adrian-studio.com:
+        dev-elli.adrian-studio.com:
+        dev-john.adrian-studio.com:

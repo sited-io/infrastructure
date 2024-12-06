@@ -58,7 +58,7 @@
     group: nomad
     mode: "440"
   when: inventory_hostname in groups.nomad_servers
-  notify: Nomad Reloaded
+  notify: Nomad Restarted
 
 - name: Copy vault config for nomad
   ansible.builtin.template:
@@ -68,4 +68,4 @@
     group: nomad
     mode: "440"
   when: inventory_hostname in groups.nomad_clients
-  notify: Nomad Reloaded
+  notify: Nomad Restarted
