@@ -37,8 +37,8 @@ job "zitadel-init" {
         data = <<EOF
 Database:
   postgres:
-    Host: [[ env "NOMAD_UPSTREAM_IP_cockroach-sql" ]]
-    Port: [[ env "NOMAD_UPSTREAM_PORT_cockroach-sql" ]]
+    Host: [[ env "NOMAD_UPSTREAM_IP_postgres-sql" ]]
+    Port: [[ env "NOMAD_UPSTREAM_PORT_postgres-sql" ]]
     Database: zitadel
     MaxOpenConns: 15
     MaxIdleConns: 10
@@ -49,7 +49,12 @@ Database:
       Username: zitadel_user
       Password: "[[ with secret "database/static-creds/zitadel_user" ]][[ .Data.password ]][[ end ]]"
       SSL:
-        Mode: disable
+        Mode: prefer
+    Admin:
+      Username: zitadel_admin
+      Password: "[[ with secret "database/static-creds/zitadel_admin" ]][[ .Data.password ]][[ end ]]"
+      SSL:
+        Mode: prefer
 EOF
       }
 

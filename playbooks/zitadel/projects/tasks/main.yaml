@@ -18,8 +18,8 @@
     VAULT_ADDR: "{{ vault_addr }}"
     VAULT_TOKEN: "{{ vault_token }}"
   ansible.builtin.command: |
-    vault read -field=client_secret \
-      kv/zitadel/users/service
+    vault kv get -mount=kv2 -field=client_secret \
+          /zitadel/users/service
   register: client_secret_out
 
 - ansible.builtin.set_fact:
@@ -41,7 +41,7 @@
 - ansible.builtin.set_fact:
     access_token: "{{ get_token_out.json.access_token }}"
 
-- name: Check if project exists
+- name: Check if main project exists
   ansible.builtin.uri:
     url: "https://{{ zitadel.domain }}/management/v1/projects/_search"
     method: POST
@@ -53,7 +53,7 @@
       queries:
         - nameQuery:
             name: main
-  register: search_project_out
+  register: search_main_project_out
 
 - name: Create main project
   ansible.builtin.uri:
@@ -66,19 +66,22 @@
     body:
       name: main
   register: create_project_out
-  when: search_project_out.json.result is undefined
+  when: search_main_project_out.json.result is undefined
 
 - ansible.builtin.set_fact:
-    main_project_id: "{{ search_project_out.json.result[0].id }}"
-  when: search_project_out.json.result is defined
+    main_project_id: "{{ search_main_project_out.json.result[0].id }}"
+  when: search_main_project_out.json.result is defined
 
 - ansible.builtin.set_fact:
     main_project_id: "{{ create_project_out.json.id }}"
-  when: search_project_out.json.result is undefined
+  when: search_main_project_out.json.result is undefined
 
-- name: Check if main application exists
+- ansible.builtin.include_tasks: main_application.yaml
+  with_items: "{{ zitadel.main_apps }}"
+
+- name: Check if websites project exists
   ansible.builtin.uri:
-    url: "https://{{ zitadel.domain }}/management/v1/projects/{{ main_project_id }}/apps/_search"
+    url: "https://{{ zitadel.domain }}/management/v1/projects/_search"
     method: POST
     headers:
       authorization: "Bearer {{ access_token }}"
@@ -87,54 +90,18 @@
     body:
       queries:
         - nameQuery:
-            name: main-website
-  register: search_main_app_out
+            name: websites
+  register: search_websites_project_out
 
-- name: Create main application
+- name: Create websites project
   ansible.builtin.uri:
-    url: "https://{{ zitadel.domain }}/management/v1/projects/{{ main_project_id }}/apps/oidc"
+    url: "https://{{ zitadel.domain }}/management/v1/projects"
     method: POST
     headers:
       authorization: "Bearer {{ access_token }}"
       content-type: application/json
     body_format: json
     body:
-      name: main-website
-      redirectUris: "{{ main_website.redirect_uris }}"
-      postLogoutRedirectUris: "{{ main_website.post_logout_redirect_uris }}"
-      responseTypes:
-        - OIDC_RESPONSE_TYPE_CODE
-      grantTypes:
-        - OIDC_GRANT_TYPE_AUTHORIZATION_CODE
-        - OIDC_GRANT_TYPE_REFRESH_TOKEN
-      appType: OIDC_APP_TYPE_WEB
-      authMethodType: OIDC_AUTH_METHOD_TYPE_NONE
-      accessTokenType: OIDC_TOKEN_TYPE_JWT
-      devMode: "{{ main_website.dev_mode }}"
-  register: create_main_application_out
-  when: search_main_app_out.json.result is undefined
-
-- ansible.builtin.set_fact:
-    main_app_id: "{{ search_main_app_out.json.result[0].id }}"
-  when: search_main_app_out.json.result is not undefined
-
-- name: Update main application OIDC config
-  ansible.builtin.uri:
-    url: "https://{{ zitadel.domain }}/management/v1/projects/{{ main_project_id }}/apps/{{ main_app_id }}/oidc_config"
-    method: PUT
-    headers:
-      authorization: "Bearer {{ access_token }}"
-      content-type: application/json
-    body_format: json
-    body:
-      redirectUris: "{{ main_website.redirect_uris }}"
-      postLogoutRedirectUris: "{{ main_website.post_logout_redirect_uris }}"
-      responseTypes:
-        - OIDC_RESPONSE_TYPE_CODE
-      grantTypes:
-        - OIDC_GRANT_TYPE_AUTHORIZATION_CODE
-        - OIDC_GRANT_TYPE_REFRESH_TOKEN
-      authMethodType: OIDC_AUTH_METHOD_TYPE_NONE
-      accessTokenType: OIDC_TOKEN_TYPE_JWT
-      devMode: "{{ main_website.dev_mode }}"
-  when: search_main_app_out.json.result is not undefined
+      name: websites
+  register: create_project_out
+  when: search_websites_project_out.json.result is undefined

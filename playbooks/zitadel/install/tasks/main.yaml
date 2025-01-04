@@ -4,7 +4,7 @@
 #
 # Requires [Nomad](../../nomad/) to be run
 #
-# Requires [Cockroach](../../cockroach) to be run and zitadel users to be configured in Vault
+# Requires [Postgres](../../postgres) to be run and zitadel users to be configured in Vault
 #
 # Requires SMTP credentials and 32 bit master_key to be saved to Vault
 #
@@ -12,7 +12,7 @@
 # - Deploy setup job to nomad
 # - Deploy start job to nomad
 # @end
-# @todo automation: Create consul intention for  zitadel-init -> cockroach-sql zitadel-setup -> cockroach-sql, zitadel-gateway -> zitadel and zitadel -> cockroach-sql
+# @todo automation: Create consul intention for  zitadel-init -> cockroach-sql, zitadel-setup -> cockroach-sql, zitadel-gateway -> zitadel and zitadel -> cockroach-sql
 
 - name: Ensure zitadel master key on Vault
   ansible.builtin.pause:
@@ -31,7 +31,7 @@
     state: directory
   tags: always
 
-- name: Copy zitade vault role to working directory
+- name: Copy zitadel vault role to working directory
   ansible.builtin.copy:
     src: zitadel.policy.hcl
     dest: /tmp/zitade/install/zitadel.policy.hcl
@@ -73,7 +73,6 @@
   delay: 10
   retries: 20
   tags: init
-
 - name: Prepare setup job file
   ansible.builtin.template:
     src: zitadel.setup.nomad.j2
@@ -97,8 +96,8 @@
     nomad job status \
       -address={{ nomad.url }} \
       -token={{ nomad_token }} \
-      -short zitadel-setup | 
-      grep Status | 
+      -short zitadel-setup |
+      grep Status |
       awk '{print $3}'
   register: setup_job_status_out
   until: setup_job_status_out.stdout == 'dead'
@@ -121,7 +120,6 @@
       -token={{ nomad_token }} \
       /tmp/zitade/install/zitadel.nomad
   tags: start
-
 # Users -> Service Users -> New
 # User Name = service
 # Name = service

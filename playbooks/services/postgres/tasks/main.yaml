@@ -20,7 +20,7 @@
         state: directory
 
     - ansible.builtin.set_fact:
-        allowed_roles: "{{ services.databases | map(attribute='user') | join(',') }}"
+        allowed_roles: "{{ services.database_users | map(attribute='name') | join(',') }}"
 
     - name: Configure postgres database secret engine with allowed roles
       ansible.builtin.command: >-
@@ -40,27 +40,27 @@
     - name: Create users
       community.postgresql.postgresql_user:
         db: postgres
-        name: "{{ item.user }}"
-        # role_attr_flags: CREATEDB
-      with_items: "{{ services.databases }}"
+        name: "{{ item.name }}"
+        role_attr_flags: "{% if 'roles' in item %}{{ item.roles | join(',') }}{% endif %}"
+      with_items: "{{ services.database_users }}"
 
     - name: Grant privs on database to user
       community.postgresql.postgresql_privs:
         db: postgres
         privs: ALL
         type: database
-        obj: "{{ item.name }}"
-        role: "{{ item.user }}"
-      with_items: "{{ services.databases }}"
+        obj: "{{ item.database }}"
+        role: "{{ item.name }}"
+      with_items: "{{ services.database_users }}"
 
-    - name: Grant create on schema public
+    - name: Grant ALL on schema public
       community.postgresql.postgresql_privs:
-        db: "{{ item.name }}"
+        db: "{{ item.database }}"
         privs: ALL
         type: schema
-        objs: public
-        role: "{{ item.user }}"
-      with_items: "{{ services.databases }}"
+        obj: public
+        role: "{{ item.name }}"
+      with_items: "{{ services.database_users }}"
 
 - run_once: true
   delegate_to: localhost
@@ -76,9 +76,9 @@
 
     - name: Create static credentials role on vault
       ansible.builtin.command: >-
-        vault write database/static-roles/{{ item.user }}
+        vault write database/static-roles/{{ item.name }}
           db_name=postgres
           rotation_statement=@/tmp/services/postgres/rotation.sql
-          username="{{ item.user }}"
+          username="{{ item.name }}"
           rotation_period=86400
-      with_items: "{{ services.databases }}"
+      with_items: "{{ services.database_users }}"

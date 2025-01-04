@@ -1,0 +1,10 @@
+{
+  "Kind": "service-intentions",
+  "Name": "commerce-api",
+  "Sources": [
+    {
+      "Action": "allow",
+      "Name": "payment-api"
+    }
+  ]
+}

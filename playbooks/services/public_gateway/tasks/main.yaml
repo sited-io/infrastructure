@@ -43,15 +43,15 @@
     group: root
     mode: "440"
   notify: backend services consul-template unit Restarted
-# - name: Copy services gateway consul-template config
-#   ansible.builtin.template:
-#     src: backend_services_gateway_conf_ctmpl.hcl.j2
-#     dest: "{{ consul_template.config_dir }}/backend_services_gateway_conf_ctmpl.hcl"
-#     owner: root
-#     group: root
-#     mode: "440"
-#   notify: backend services consul-template unit Restarted
 
+- name: Copy services gateway consul-template config
+  ansible.builtin.template:
+    src: backend_services_gateway_conf_ctmpl.hcl.j2
+    dest: "{{ consul_template.config_dir }}/backend_services_gateway_conf_ctmpl.hcl"
+    owner: root
+    group: root
+    mode: "440"
+  notify: backend services consul-template unit Restarted
 # - run_once: true
 #   delegate_to: localhost
 #   become: false

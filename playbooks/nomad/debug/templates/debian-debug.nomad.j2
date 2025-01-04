@@ -3,7 +3,7 @@ job "debian-debug" {
   type = "service"
 
   group "debian-debug" {
-    count = 1
+    count = 2
 
     network {
       mode = "bridge"
@@ -16,6 +16,14 @@ job "debian-debug" {
             upstreams {
               destination_name = "postgres-sql"
               local_bind_port  = 5432
+            }
+            upstreams {
+              destination_name = "nats"
+              local_bind_port = 4222
+            }
+            upstreams {
+              destination_name = "zitadel"
+              local_bind_port = 8080
             }
           }
         }

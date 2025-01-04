@@ -4,6 +4,7 @@ all:
     hex_chars: 0123456789ABCDEF
 
     current_environment: dev
+    domain: sited1.de
     api_url: api.sited1.de
     grpc_url: grpc.sited1.de
     data_center: dc1

@@ -1,6 +1,8 @@
-path "database/static-creds/{{ item.name }}_user" {
+{% if 'database_user' in item %}
+path "database/static-creds/{{ item.database_user }}" {
   capabilities = ["read"]
 }
+{% endif %}
 
 path "kv2/data/services" {
   capabilities = ["read"]

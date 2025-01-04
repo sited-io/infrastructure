@@ -1,19 +1,7 @@
 {
   "Kind": "service-intentions",
-  "Name": "postgres-sql",
+  "Name": "nats",
   "Sources": [
-    {
-      "Action": "allow",
-      "Name": "zitadel-init"
-    },
-    {
-      "Action": "allow",
-      "Name": "zitadel-setup"
-    },
-    {
-      "Action": "allow",
-      "Name": "zitadel"
-    },
     {
       "Action": "allow",
       "Name": "websites-api"
@@ -22,6 +10,7 @@
       "Action": "allow",
       "Name": "commerce-api"
     },
+
     {
       "Action": "allow",
       "Name": "commerce-v2-api"

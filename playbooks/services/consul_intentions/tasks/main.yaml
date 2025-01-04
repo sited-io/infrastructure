@@ -21,12 +21,19 @@
 
     - ansible.builtin.set_fact:
         gateway_services: "{{ services.backend | selectattr('use_ingress_gateway', 'true') }}"
+        intentions:
+          - postgres
+          - nats
+          - zitadel
+          - commerce-api
 
-    - name: Copy postgres intentions configurations to working directory
+    - name: Copy intention configurations to working directory
       ansible.builtin.copy:
-        src: postgres_intention.json
-        dest: /tmp/services/consul_services/postgres_intention.json
+        src: "{{ item }}_intention.json"
+        dest: "/tmp/services/consul_services/{{ item }}_intention.json"
+      with_items: "{{ intentions }}"
 
-    - name: Create consul intentions for postgres
+    - name: Create consul intentions
       ansible.builtin.command: >-
-        consul config write /tmp/services/consul_services/postgres_intention.json
+        consul config write /tmp/services/consul_services/{{ item }}_intention.json
+      with_items: "{{ intentions }}"

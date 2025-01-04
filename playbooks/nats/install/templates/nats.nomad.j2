@@ -1,0 +1,82 @@
+job "nats" {
+  datacenters = ["{{ data_center }}"]
+  type        = "system"
+
+  group "nats" {
+    network {
+      mode = "bridge"
+
+      port "nats" {}
+      port "cluster" {}
+    }
+
+    service {
+      name     = "nats"
+      port     = "nats"
+
+      connect {
+        sidecar_service {}
+      }
+    }
+
+    service {
+      name         = "nats-cluster"
+      port         = "cluster"
+
+      connect {
+        sidecar_service {}
+      }
+    }
+
+    task "nats" {
+      driver = "docker"
+
+      resources {
+        cpu    = 200
+        memory = 256
+        memory_max = 256
+      }
+
+      vault {
+        policies = ["service-nats"]
+      }
+
+      template {
+        destination = "${NOMAD_SECRETS_DIR}/cluster.conf"
+        change_mode = "restart"
+        left_delimiter  = "[["
+        right_delimiter = "]]"
+        data        = <<EOF
+server_name: "[[ env "NOMAD_ALLOC_ID" ]]"
+listen: 0.0.0.0:[[ env "NOMAD_PORT_nats" ]]
+
+
+authorization: {
+  user: [[ with nomadVar "nomad/jobs" -]][[ .NATS_USER ]][[- end -]],
+  password: [[ with secret "kv2/data/services" -]][[ .Data.data.NATS_PASSWORD ]][[- end ]]
+}
+
+cluster {
+  name: stream
+  listen: 0.0.0.0:[[ env "NOMAD_PORT_cluster" ]]
+  pool_size: 2
+  routes: [
+    [[- range service "nats-cluster" ]]
+    [[- if ne .Address (env "NOMAD_IP_nats") ]]
+    nats://[[ .Address ]]:[[ .Port ]]
+    [[- end ]]
+    [[- end ]]
+  ]
+}
+EOF
+      }
+
+
+      config {
+        image = "nats"
+        args  = ["-c", "${NOMAD_SECRETS_DIR}/cluster.conf"]
+        ports = ["nats", "cluster"]
+      }
+    }
+  }
+}

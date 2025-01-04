@@ -3,16 +3,7 @@ all:
   vars:
     services:
       github_service_deployer_password_key: DEV_SERVICE_DEPLOYER_PASSWORD
-      frontend:
-        - name: project-frontend
-          url: sited1.de
-          custom_origin: false
-        - name: dashboard-frontend
-          url: dashboard.sited1.de
-          custom_origin: false
-        - name: websites-frontend
-          url: "*.sited1.de"
-          custom_origin: false
+
       databases:
         - name: zitadel
           user: zitadel_user
@@ -28,6 +19,39 @@ all:
           user: media_user
         - name: stripe_webhooks
           user: stripe_webhooks_user
+
+      database_users:
+        - name: zitadel_user
+          database: zitadel
+        - name: zitadel_admin
+          database: zitadel
+          roles:
+            - CREATEDB
+            - CREATEROLE
+        - name: websites_user
+          database: websites
+        - name: commerce_user
+          database: commerce
+        - name: commerce_v2_user
+          database: commerce_v2
+        - name: payment_user
+          database: payment
+        - name: media_user
+          database: media
+        - name: stripe_webhooks_user
+          database: stripe_webhooks
+
+      frontend:
+        - name: project-frontend
+          url: sited1.de
+          custom_origin: false
+        - name: dashboard-frontend
+          url: dashboard.sited1.de
+          custom_origin: false
+        - name: websites-frontend
+          url: "*.sited1.de"
+          custom_origin: false
+
       backend:
         - name: reflection
           use_ingress_gateway: true
@@ -35,6 +59,7 @@ all:
             - grpc.reflection.v1.ServerReflection
             - grpc.reflection.v1alpha.ServerReflection
         - name: websites
+          database_user: websites_user
           use_ingress_gateway: true
           grpc_services:
             - sited_io.websites.v1.WebsiteService
@@ -43,6 +68,7 @@ all:
             - sited_io.websites.v1.PageService
             - sited_io.websites.v1.StaticPageService
         - name: commerce
+          database_user: commerce_user
           use_ingress_gateway: true
           proxy_extra_configurations:
             - client_max_body_size 16M;
@@ -53,16 +79,19 @@ all:
             - sited_io.commerce.v1.ShopDomainService
             - sited_io.commerce.v1.ShippingRateService
         - name: commerce-v2
+          database_user: commerce_v2_user
           use_ingress_gateway: true
           proxy_extra_configurations:
             - client_max_body_size 16M;
           grpc_services:
             - sited_io.commerce.v2.CommerceService
         - name: payment
+          database_user: payment_user
           use_ingress_gateway: true
           grpc_services:
             - sited_io.payment.v1.StripeService
         - name: media
+          database_user: media_user
           use_ingress_gateway: true
           proxy_extra_configurations:
             - client_max_body_size 64M;
@@ -70,6 +99,7 @@ all:
             - sited_io.media.v1.MediaService
             - sited_io.media.v1.MediaSubscriptionService
         - name: stripe-webhooks
+          database_user: stripe_webhooks_user
           use_ingress_gateway: true
           http_services:
             - stripe-webhooks/

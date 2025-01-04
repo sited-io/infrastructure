@@ -18,41 +18,47 @@ server {
   ssl_certificate {{ public_gateway.config_dir }}/origin.pem;
   ssl_certificate_key {{ public_gateway.config_dir }}/origin.key;
 
-  location /zitadel.admin.v1.AdminService/ {
-    grpc_pass grpc://zitadel_backends;
-    grpc_set_header Host $host;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  }
-
-  location /zitadel.auth.v1.AuthService/ {
-    grpc_pass grpc://zitadel_backends;
-    grpc_set_header Host $host;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  }
-
-  location /zitadel.management.v1.ManagementService/ {
-    grpc_pass grpc://zitadel_backends;
-    grpc_set_header Host $host;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  }
-
-  location /zitadel.system.v1.SystemService/ {
-    grpc_pass grpc://zitadel_backends;
-    grpc_set_header Host $host;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  }
-
-  location /zitadel.user.v2alpha.UserService/ {
-    grpc_pass grpc://zitadel_backends;
-    grpc_set_header Host $host;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-  }
-
-  
   location / {
     proxy_pass http://zitadel_backends;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_http_version 1.1;
+  }
+
+  location /grpc.reflection.v1.ServerReflection {
+    grpc_pass grpc://reflection_backends;
+    grpc_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+  location /grpc.reflection.v1alpha.ServerReflection {
+    grpc_pass grpc://reflection_backends;
+    grpc_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  location /zitadel.admin.v1.AdminService/ {
+    grpc_pass grpc://zitadel_backends;
+    grpc_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+  location /zitadel.auth.v1.AuthService/ {
+    grpc_pass grpc://zitadel_backends;
+    grpc_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+  location /zitadel.management.v1.ManagementService/ {
+    grpc_pass grpc://zitadel_backends;
+    grpc_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+  location /zitadel.system.v1.SystemService/ {
+    grpc_pass grpc://zitadel_backends;
+    grpc_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+  location /zitadel.user.v2alpha.UserService/ {
+    grpc_pass grpc://zitadel_backends;
+    grpc_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   }
 }

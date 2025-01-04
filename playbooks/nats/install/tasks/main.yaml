@@ -1,0 +1,46 @@
+---
+- ansible.builtin.import_tasks: ../../common-tasks/vault_login/vault_login.yaml
+
+- ansible.builtin.import_tasks: ../../common-tasks/nomad_login/nomad_login.yaml
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+    NOMAD_ADDR: "{{ nomad.url }}"
+    NOMAD_TOKEN: "{{ nomad_token }}"
+  block:
+    - name: Ensure working directory
+      ansible.builtin.file:
+        path: /tmp/nats/install
+        state: directory
+
+    - name: Check nats password exists
+      ansible.builtin.command: |
+        vault kv get -mount=kv2 -field=NATS_PASSWORD /services
+      register: nats_password_out
+      ignore_errors: true
+
+    - when: nats_password_out.rc != 0
+      fail:
+
+    - name: Copy nats service role to working directory
+      ansible.builtin.template:
+        src: service-nats.policy.hcl.j2
+        dest: /tmp/nats/install/service-nats.hcl
+
+    - name: Create nats service role on vault
+      ansible.builtin.command: >-
+        vault policy write service-nats
+          /tmp/nats/install/service-nats.hcl
+
+    - name: Copy nats job file to working directory
+      ansible.builtin.template:
+        src: nats.nomad.j2
+        dest: /tmp/nats/install/nats.nomad
+
+    - name: Deploy NATS on Nomad
+      ansible.builtin.command: |
+        nomad job run /tmp/nats/install/nats.nomad

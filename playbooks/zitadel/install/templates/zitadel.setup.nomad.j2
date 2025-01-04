@@ -89,8 +89,8 @@ DefaultInstance:
 
 Database:
   postgres:
-    Host: [[ env "NOMAD_UPSTREAM_IP_cockroach-sql" ]]
-    Port: [[ env "NOMAD_UPSTREAM_PORT_cockroach-sql" ]]
+    Host: [[ env "NOMAD_UPSTREAM_IP_postgres-sql" ]]
+    Port: [[ env "NOMAD_UPSTREAM_PORT_postgres-sql" ]]
     Database: zitadel
     MaxOpenConns: 15
     MaxIdleConns: 10

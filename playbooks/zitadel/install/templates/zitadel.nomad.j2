@@ -3,7 +3,7 @@ job "zitadel" {
   type        = "service"
 
   group "zitadel" {
-    count = 3
+    count = 2
 
     network {
       mode = "bridge"
@@ -31,7 +31,7 @@ job "zitadel" {
       driver = "docker"
 
       resources {
-        cpu    = 2000
+        cpu    = 200
         memory = 256
         memory_max = 256
       }
@@ -77,8 +77,8 @@ DefaultInstance:
 
 Database:
   postgres:
-    Host: [[ env "NOMAD_UPSTREAM_IP_cockroach-sql" ]]
-    Port: [[ env "NOMAD_UPSTREAM_PORT_cockroach-sql" ]]
+    Host: [[ env "NOMAD_UPSTREAM_IP_postgres-sql" ]]
+    Port: [[ env "NOMAD_UPSTREAM_PORT_postgres-sql" ]]
     Database: zitadel
     MaxOpenConns: 15
     MaxIdleConns: 10

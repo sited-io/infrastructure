@@ -118,3 +118,17 @@
     dest: "/usr/local/bin/{{ item.split('/') | last }}"
     state: link
   with_items: "{{ binary_paths }}"
+
+- name: Get nodesource script
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/setup_23.x
+    dest: /tmp/nodesource_setup.sh
+    mode: "0755"
+
+- name: Run nodesource script
+  ansible.builtin.command: /tmp/nodesource_setup.sh
+
+- name: Install nodejs
+  ansible.builtin.apt:
+    package: nodejs
+    state: latest
