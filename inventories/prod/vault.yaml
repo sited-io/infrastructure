@@ -2,24 +2,19 @@
 all:
   vars:
     vault:
-      ui_host: vault.peoplesmarkets.com
-      url: https://vault.peoplesmarkets.com
-      consul_dns_domain: 10.0.4.6
+      ui_host: prod-vault-sited-io.adrian-studio.com
+      url: https://prod-vault-sited-io.adrian-studio.com
+      consul_dns_domain: vault.service.consul
       config_dir: /etc/vault.d
       certs_dir: /opt/vault/tls
       data_dir: /opt/vault/data
       ports:
         https: 8200
         cluster: 8201
-      auto_unseal:
-        project: peoplesmarkets
-        region: europe-west3
-        key_ring: vault-auto-key-ring
-        crypto_key: vault-auto-crypto-key
 
   children:
     vault:
       hosts:
-        eudea.peoplesmarkets.com:
-        euliania.peoplesmarkets.com:
-        eurelia.peoplesmarkets.com:
+        prod-carey.adrian-studio.com:
+        prod-elli.adrian-studio.com:
+        prod-john.adrian-studio.com:

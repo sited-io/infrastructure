@@ -2,10 +2,17 @@
 all:
   vars:
     zitadel:
-      version: "v2.40.8"
-      domain: auth.peoplesmarkets.com
-      admin_email: maxiteme@peoplesmarkets.com
+      version: "v2.66.0"
+      domain: auth.sited.io
+      admin_email: maxiteme@sited.io
       service_user: service
       smtp:
         host: smtp.postmarkapp.com:25
-        from: noreply@peoplesmarkets.com
+        from: noreply@sited.io
+      main_apps:
+        - name: dashboard-frontend
+          dev_mode: true
+          redirect_uris:
+            - https://dashboard.sited.io/user/sign-in-callback
+          post_logout_redirect_uris:
+            - https://dashboard.sited.io/

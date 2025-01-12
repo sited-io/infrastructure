@@ -2,8 +2,8 @@
 all:
   vars:
     nomad:
-      ui_host: nomad.peoplesmarkets.com
-      url: https://nomad.peoplesmarkets.com
+      ui_host: prod-nomad-sited-io.adrian-studio.com
+      url: https://prod-nomad-sited-io.adrian-studio.com
       consul_dns_domain: nomad.service.consul
       data_dir: /var/lib/nomad
       config_dir: /etc/nomad.d
@@ -22,11 +22,11 @@ all:
       children:
         nomad_servers:
           hosts:
-            euliania.peoplesmarkets.com:
-            eudea.peoplesmarkets.com:
-            eurelia.peoplesmarkets.com:
+            prod-carey.adrian-studio.com:
+            prod-elli.adrian-studio.com:
+            prod-john.adrian-studio.com:
         nomad_clients:
           hosts:
-            euria.peoplesmarkets.com:
-            eudokia.peoplesmarkets.com:
-            eudel.peoplesmarkets.com:
+            prod-josie.adrian-studio.com:
+            prod-nina.adrian-studio.com:
+            prod-rocky.adrian-studio.com:

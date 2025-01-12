@@ -10,17 +10,17 @@ all:
     data_center: dc1
     graphana_log_url: logs-prod-008.grafana.net
     localhost_ip: "127.0.0.1"
-    private_network_range: 10.0.0.0/22
+    private_network_range: "10.0.0.0/22"
 
     systemd_dir: /etc/systemd/system
     systemd_resolved_config_dir: /etc/systemd/resolved.conf.d
+
+    nginx_version: nginx-1.27.3
 
     consul_template:
       data_dir: /var/lib/consul-template
       token_dir: /var/lib/consul-template/tokens
       config_dir: /etc/consul-template
-
-    nginx_version: nginx-1.27.3
 
   hosts:
     dev-carey.adrian-studio.com:

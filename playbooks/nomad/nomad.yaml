@@ -24,11 +24,6 @@
   tags:
     - vault
 
-# - name: Configure mTLS
-#   import_playbook: tls.yaml
-#   tags:
-#     - tls
-
 - name: Configure PKI for Nomad in vault
   import_playbook: ssl_pki.yaml
   tags:

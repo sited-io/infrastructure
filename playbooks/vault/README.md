@@ -24,6 +24,8 @@ ansible-playbook -i inventories/prod/ -e @vaults/prod.yaml --vault-password-file
 
 ## Init and unseal commands
 
+### dev
+
 ```sh
 sudo vault operator init \
   -address https://10.0.0.1:8200 \
@@ -33,6 +35,22 @@ sudo vault operator init \
 
 sudo vault operator unseal \
   -address https://10.0.0.1:8200 \
+  -ca-cert /opt/vault/tls/ca.crt \
+  -client-cert /opt/vault/tls/client.crt \
+  -client-key /opt/vault/tls/client.key
+```
+
+### prod
+
+```sh
+sudo vault operator init \
+  -address https://10.0.4.1:8200 \
+  -ca-cert /opt/vault/tls/ca.crt \
+  -client-cert /opt/vault/tls/client.crt \
+  -client-key /opt/vault/tls/client.key
+
+sudo vault operator unseal \
+  -address https://10.0.4.1:8200 \
   -ca-cert /opt/vault/tls/ca.crt \
   -client-cert /opt/vault/tls/client.crt \
   -client-key /opt/vault/tls/client.key

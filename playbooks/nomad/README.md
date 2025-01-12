@@ -18,10 +18,12 @@ ansible-playbook -i inventories/prod/ -e @vaults/prod.yaml --vault-password-file
 
 ### [2: Configure](./configure/)
 
-### [3: ACL - Access Control Lists](./acl/)
+### [3: Consul](./consul/)
 
-### [4: Vault](./vault/)
+### [4: ACL - Access Control Lists](./acl/)
 
-### [5: Consul](./consul/)
+### [5: Vault](./vault/)
 
-### [6: TLS - Transport Layer Security](./tls/)
+### [6: SSL PKI - SSL Public Key Infrastructure](./ssl_pki/)
+
+### [7: SSL PKI - SSL update](./ssl_update/)

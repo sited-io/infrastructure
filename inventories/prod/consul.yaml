@@ -3,14 +3,14 @@ all:
   vars:
     consul:
       domain: consul
-      ui_host: consul.peoplesmarkets.com
-      url: https://consul.peoplesmarkets.com
+      ui_host: prod-consul-sited-io.adrian-studio.com
+      url: https://prod-consul-sited-io.adrian-studio.com
       data_dir: /var/lib/consul
       config_dir: /etc/consul.d
       certs_dir: /etc/consul.d/certs
       policy_dir: /etc/consul.d/policies
       dns_recursor: 1.1.1.1 # Cloudflare
-      envoy_version: "1.26.4"
+      envoy_version: "1.31.3"
       ports:
         dns: 8600
         http: 8500

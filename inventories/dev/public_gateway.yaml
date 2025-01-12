@@ -8,6 +8,8 @@ all:
       health_url: "dev-health-sited-io.adrian-studio.com"
       origin_certificate: "{{ secrets.cloudflare.origin_certificate.replace('\\n', '\n') }}"
       origin_certificate_key: "{{ secrets.cloudflare.origin_certificate_key.replace('\\n', '\n') }}"
+      services_origin_certificate: "{{ secrets.cloudflare.services_origin_certificate.replace('\\n', '\n') }}"
+      services_origin_certificate_key: "{{ secrets.cloudflare.services_origin_certificate_key.replace('\\n', '\n') }}"
 
   children:
     public_gateway:

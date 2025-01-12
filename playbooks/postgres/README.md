@@ -15,3 +15,9 @@ ansible-playbook -i inventories/prod/ -e @vaults/prod.yaml --vault-password-file
 ## Roles
 
 ### [1: Install](./install/)
+
+### [2: Configure](./configure/)
+
+### [3: Consul](./consul/)
+
+### [4: Credentials](./credentials/)

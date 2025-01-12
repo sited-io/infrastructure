@@ -24,4 +24,6 @@ ansible-playbook -i inventories/prod/ -e @vaults/prod.yaml --vault-password-file
 
 ### [5: DNS - Domain Name System](./dns/)
 
-### [6: TLS - Transport Layer Security](./tls/)
+### [6: SSL PKI - SSL Public Key Infrastructure](./ssl_pki/)
+
+### [7: SSL PKI - SSL update](./ssl_update/)

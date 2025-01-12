@@ -14,9 +14,17 @@
 
 #### [5: Nomad](./playbooks/nomad/README.md)
 
+### Message Broker
+
+#### [1: NATS](./playbooks/nats/README.md)
+
 ### Databases
 
 #### [1: Postgres](./playbooks/postgres/README.md)
+
+### Identity Management
+
+#### [1: ZITADEL](./playbooks/zitadel/README.md)
 
 ### Services
 

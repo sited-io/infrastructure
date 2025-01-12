@@ -16,8 +16,8 @@ server {
 
   server_name {{ api_url }};
 
-  ssl_certificate {{ public_gateway.config_dir }}/origin.pem;
-  ssl_certificate_key {{ public_gateway.config_dir }}/origin.key;
+  ssl_certificate {{ public_gateway.config_dir }}/services-origin.pem;
+  ssl_certificate_key {{ public_gateway.config_dir }}/services-origin.key;
 
   proxy_set_header Host $host;
   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -60,8 +60,8 @@ server {
 
   server_name {{ grpc_url }};
 
-  ssl_certificate {{ public_gateway.config_dir }}/origin.pem;
-  ssl_certificate_key {{ public_gateway.config_dir }}/origin.key;
+  ssl_certificate {{ public_gateway.config_dir }}/services-origin.pem;
+  ssl_certificate_key {{ public_gateway.config_dir }}/services-origin.key;
 
   grpc_set_header Host $host;
   grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
